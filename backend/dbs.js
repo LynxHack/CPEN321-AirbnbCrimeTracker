@@ -1,15 +1,21 @@
+require('dotenv').config()
+
 const MongoClient = require('mongodb').MongoClient;
 
 class mongoDB{
     constructor(uri, dbName){
-        MongoClient.connect(uri, {
-        useNewUrlParser: true
-        }, (err, client) => {
-            if (err) reject(err);
-            else {
-                console.log('[MongoClient] Connected to '+uri+'/'+dbName);
-                resolve(client.db(dbName));
-            }
+        if (!(this instanceof mongoDB)) return new mongoDB(uri, dbName);
+	    this.connected = new Promise(function(resolve, reject){
+            MongoClient.connect(uri, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true
+            }, (err, client) => {
+                if (err) reject(err);
+                else {
+                    console.log('[MongoClient] Connected to '+uri+'/'+dbName);
+                    resolve(client.db(dbName));
+                }
+            });
         });
     }
 
@@ -27,4 +33,4 @@ class mongoDB{
     }
 }
 
-module.exports.mongoDB = mongoDB
+module.exports = mongoDB

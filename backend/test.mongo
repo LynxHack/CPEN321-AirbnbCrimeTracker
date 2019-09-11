@@ -1,5 +1,5 @@
 conn = new Mongo();
-db = conn.getDB("cpen400a-bookstore");
+db = conn.getDB("CrimeTracker");
 db.dropDatabase();
 
 result = db.test.insert([
