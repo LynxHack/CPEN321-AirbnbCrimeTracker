@@ -1,0 +1,27 @@
+{
+  "name": "cpen321",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LynxHack/CPEN321-AirbnbCrimeTracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LynxHack/CPEN321-AirbnbCrimeTracker/issues"
+  },
+  "homepage": "https://github.com/LynxHack/CPEN321-AirbnbCrimeTracker#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "method-override": "^3.0.0",
+    "mongodb": "^3.3.2"
+  }
+}

@@ -1,0 +1,11 @@
+conn = new Mongo();
+db = conn.getDB("cpen400a-bookstore");
+db.dropDatabase();
+
+result = db.test.insert([
+	{
+		hello: "world"
+	}
+]);
+
+print(result);
