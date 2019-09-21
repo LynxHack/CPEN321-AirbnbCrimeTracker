@@ -11,9 +11,9 @@ var dbname = 'CrimeTracker'; // Change this to atlas dbname
 // Connect local
 var uri = 'mongodb://localhost:27017'; // Change this to atlas uri
 
-// Connect via atlas
-var password = process.env.ATLASPASSWORD;
-var uri = `mongodb+srv://crimetracker:${password}@crimetracker-ilzwr.mongodb.net/test?retryWrites=true&w=majority`
+// // Connect via atlas
+// var password = process.env.ATLASPASSWORD;
+// var uri = `mongodb+srv://crimetracker:${password}@crimetracker-ilzwr.mongodb.net/test?retryWrites=true&w=majority`
 
 var db = new mongoDB(uri, dbname);
 
