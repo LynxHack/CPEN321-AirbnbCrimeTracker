@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+var util = require('util');
 var express = require('express');
 var router = express.Router();
 const bodyParser = require("body-parser");
@@ -35,11 +35,29 @@ router.get('/testdb', (req, res) => {
     });
 });
 
+// Clean up circular jsons
+const getCircularReplacer = () => {
+  const seen = new WeakSet();
+  return (key, value) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return;
+      }
+      seen.add(value);
+    }
+    return value;
+  };
+};
+
+// Look under listings for airbnb posts
 router.post('/getListing', (req, res) => {
   try{
-    axios.get(`http://localhost:${pythonport}/${req.body.query}`, (res)=>{
-      res.send(done);
-      res.status(200).json(res);
+    axios.get(`http://localhost:${pythonport}/${req.body.query}`).then((result)=>{
+      // get listings via
+      // result.data.explore_tabs[0].sections[2].listings[4].listing.lng
+      // result.data.explore_tabs[0].sections[2].listings[4].listing.lat
+      var numsections = result.data.explore_tabs[0].sections.length
+      res.status(200).send(JSON.stringify(result.data.explore_tabs[0].sections[numsections - 1], getCircularReplacer()));
     });
   }
   catch(err){
