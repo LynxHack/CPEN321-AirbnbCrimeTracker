@@ -1,11 +1,31 @@
-Build Image
+## Docker Build Image
 
 ```
 docker build -t express-server:dockerfile .
 ```
 
-Run Image
+## Docker Run Image By Itself
 
 ```
 docker run -p 3000:3000 -d express-server:dockerfile
 ````
+
+## Run Both Python Microservice and Nodejs Server
+
+```
+docker run -p 3000:3000 -d express-server:dockerfile
+````
+
+## Instructions
+
+To run the backend server
+
+```
+node server.js
+```
+
+or
+
+```
+npm start
+```

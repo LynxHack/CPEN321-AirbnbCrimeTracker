@@ -1,6 +1,8 @@
-Python Airbnb Microservice
+# Python Airbnb Microservice
 
-Setting up Isolated Venv
+## Manually Running It
+
+### Setting up Isolated Venv
 ```
 virtualenv --no-site-packages venv
 ```
@@ -11,10 +13,11 @@ Working in virtualenv
 . venv/bin/activate
 ```
 
-Based on 
+### API Documentation
 
 https://github.com/nderkach/airbnb-python
 
+## Running Via Docker Individually
 
 Building new docker image
 ```
