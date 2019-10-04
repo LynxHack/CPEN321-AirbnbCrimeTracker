@@ -8,13 +8,16 @@ docker build -t express-server:dockerfile .
 
 ```
 docker run -p 3000:3000 -d express-server:dockerfile
-````
+```
 
 ## Run Both Python Microservice and Nodejs Server
 
 ```
-docker run -p 3000:3000 -d express-server:dockerfile
-````
+docker-compose build
+```
+```
+docker-compose up
+```
 
 ## Instructions
 
