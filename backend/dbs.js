@@ -1,36 +1,95 @@
 require('dotenv').config()
 
-const MongoClient = require('mongodb').MongoClient;
+const mysql = require('mysql');
 
-class mongoDB{
-    constructor(uri, dbName){
-        if (!(this instanceof mongoDB)) return new mongoDB(uri, dbName);
-	    this.connected = new Promise(function(resolve, reject){
-            MongoClient.connect(uri, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true
-            }, (err, client) => {
-                if (err) reject(err);
-                else {
-                    console.log('[MongoClient] Connected to '+uri+'/'+dbName);
-                    resolve(client.db(dbName));
-                }
-            });
-        });
-    }
+var dbName = 'crime_data';
+var tableName = 'crime_data';
+var fileName = 'crimedata_csv_all_years.csv';
 
-    // Add db queries here
-    getTest(query){
-        return this.connected.then((db) => {
-            return db.collection("test").find(query).toArray();
-        })
-    }
+class db {
+  constructor() {
+    this.con = mysql.createConnection({
+      host: "localhost",
+      user: "root",
+      password: "",
+      port: '3306',
+      socketPath: '/var/run/mysqld/mysqld.sock'
+    });
 
-    putTest(query){
-        return this.connected.then((db) => {
-            return db.collection("test").insertOne(query);
-        })
-    }
+    this.con.connect(function(err) {
+      if (err) {
+        console.log(err + " while connecting to mysql!");
+        throw err;
+      }
+      console.log("Connected to Database!");
+    });
+  }
+
+  initializeDb() {
+    var that = this;
+    return that.createDatabase().then(that.createTable());
+  }
+
+  createDatabase() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
+        if (err) {
+          console.log(err + " while creating database!");
+          reject();
+        }
+        console.log("Crime data database created");
+      });
+
+      that.con.changeUser({
+        database: dbName
+      }, function(err) {
+        if (err) {
+          console.log(err + " while changing database!");
+          reject();
+        }
+        console.log("Swapping to crime_data database");
+        resolve();
+      });
+    });
+  }
+
+  createTable() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, month INT, day INT, hour INT, minute INT, hundred_block VARCHAR(255), neighbourhood VARCHAR(255), x FLOAT, y FLOAT, id INT AUTO_INCREMENT PRIMARY KEY)", function(err, result) {
+        if (err) {
+          console.log(err + " while loading table!");
+          reject();
+        }
+        console.log("Crime data table created");
+      });
+
+      that.con.query("DELETE FROM " + tableName, function(err, result) {
+        if (err) {
+          console.log(err + " while loading table!");
+          reject();
+        }
+        console.log("Cleared Crime data table");
+        resolve();
+      });
+    });
+  }
+
+  loadTable() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      that.con.query("LOAD DATA LOCAL INFILE '" + fileName + "' INTO TABLE crime_data FIELDS TERMINATED BY ',' ENCLOSED BY '\"'", function(err, result) {
+        if (err) {
+          console.log(err + " while loading crime data into table!");
+          reject();
+        }
+        console.log("Crime data loaded into table");
+        resolve();
+      });
+    });
+  }
 }
 
-module.exports = mongoDB
+var database = new db();
+module.exports = database;

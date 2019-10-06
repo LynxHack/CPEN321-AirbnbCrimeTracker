@@ -1,0 +1,4 @@
+/backend/node_modules
+/backend/.env
+/backend/crimedata.zip
+/backend/crimedata_csv_all_years.csv
