@@ -10,12 +10,16 @@ var zipFile = 'crimedata.zip';
 
 class CrimeDataService {
   initializeCrimeDataSet() {
-    const output = fs.createWriteStream(zipFile);
-    output.on("finish", () => {
-      this.unzipFile().then(db.loadTable());
-    });
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      const output = fs.createWriteStream(zipFile);
+      output.on("finish", () => {
+        that.unzipFile().then(db.loadTable()).then(db.printTopTen());
+        resolve();
+      });
 
-    this.requestCrimeData(output);
+      that.requestCrimeData(output);
+    });
   }
 
   requestCrimeData(output) {
