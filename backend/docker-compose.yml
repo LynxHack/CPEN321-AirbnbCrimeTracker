@@ -20,11 +20,13 @@ services:
     - 3000:3000 # <host-port>:<container-port> to listen to, so anything running on port 3000 of the container will map to port 3000 on our localhost
     volumes:
     - ./:/app # <host-directory>:<container-directory> this says map the current directory from your system to the /app directory in the docker container
-    #command: ["./wait-for-it.sh", "database:3306", "--", "node", "server.js"] # The command docker will execute when starting the container, this command is not allowed to exit, if it does your container will stop
+    command: ["./wait-for-it.sh", "database:3306", "--", "node", "server.js"] # The command docker will execute when starting the container, this command is not allowed to exit, if it does your container will stop
     depends_on:
       - database
   database:
       image: 'mysql:5.6.45'
+      network_mode: "host"
+      hostname: localhost
       environment:
         MYSQL_PASSWORD: 'password'
         MYSQL_ROOT_PASSWORD: 'password'
