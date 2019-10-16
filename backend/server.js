@@ -10,7 +10,7 @@ const PORT = 3000;
 var d = new Date();
 console.log("Starting server at " + d.toLocaleString());
 
-// db.initializeDb().then(crimeDataService.initializeCrimeDataSet());
+crimeDataService.initializeCrimeDataSet();
 
 // Routes
 app.use(require('./routes'));

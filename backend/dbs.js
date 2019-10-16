@@ -36,7 +36,7 @@ class db {
 
   initializeDb() {
     var that = this;
-    return that.createDatabase().then(that.createTable());
+    return that.createDatabase().then(value => that.createTable());
   }
 
   createDatabase() {
@@ -66,19 +66,12 @@ class db {
   createTable() {
     var that = this;
     return new Promise(function(resolve, reject) {
-      that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, month INT, day INT, hour INT, minute INT, hundred_block VARCHAR(255), neighbourhood VARCHAR(255), x FLOAT, y FLOAT, id INT AUTO_INCREMENT PRIMARY KEY)", function(err, result) {
-        if (err) {
-          console.log(err + " while loading table!");
-        }
-        console.log("Crime data table created");
-      });
-
-      that.con.query("DELETE FROM " + tableName, function(err, result) {
+      that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, month INT, day INT, hour INT, minute INT, hundred_block VARCHAR(255), neighbourhood VARCHAR(255), x FLOAT, y FLOAT, id INT AUTO_INCREMENT PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", function(err, result) {
         if (err) {
           console.log(err + " while loading table!");
           reject();
         }
-        console.log("Cleared Crime data table");
+        console.log("Crime data table created");
         resolve();
       });
     });
@@ -103,13 +96,41 @@ class db {
     });
   }
 
-  printTopTen() {
+  clearTable() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      that.con.query("DELETE FROM " + tableName, function(err, result) {
+        if (err) {
+          console.log(err + " while loading table!");
+          reject();
+        }
+        console.log("Cleared Crime data table");
+        resolve();
+      });
+    });
+  }
+
+  printTopFive() {
     this.con.query("SELECT * FROM " + tableName + " LIMIT 5", function(err, result) {
       if (err) {
         console.log(err + " while loading table!");
         reject();
       }
+      console.log("Printing first 5 rows of table...\n")
       console.log(result);
+    });
+  }
+
+  checkLastUpdate() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      that.con.query("SELECT created_at FROM " + tableName + " LIMIT 1", function(err, result) {
+        if (err) {
+          console.log(err + " getting data from table!");
+          reject();
+        }
+        resolve(result[0]);
+      });
     });
   }
 }
