@@ -34,7 +34,11 @@ class CrimeDataService {
             return new Promise(function(resolve, reject) { resolve(); });
           }
         }
-      }).then(result => db.printTopFive());
+      });
+  }
+
+  getCrimeData(xmin, xmax, ymin, ymax, year) {
+      return db.sendQuery(xmin, xmax, ymin, ymax, year);
   }
 
   updateCrimeDataSet() {

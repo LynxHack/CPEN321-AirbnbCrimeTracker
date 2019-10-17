@@ -133,6 +133,23 @@ class db {
       });
     });
   }
+
+  sendQuery(xmin, xmax, ymin, ymax, year) {
+    var that = this;
+    var params = [xmin, xmax, ymin, ymax, year];
+
+    var queryString = "SELECT type, year, x, y FROM " + tableName + " WHERE x >= ? AND x <= ? AND y >= ? AND y <= ?";
+    if(year) queryString += " AND year >= ?"
+    return new Promise(function(resolve, reject) {
+      that.con.query(queryString, params, function(err, result) {
+        if (err) {
+          console.log(err + " getting data from table!");
+          reject();
+        }
+        resolve(result);
+      });
+    });
+  }
 }
 
 var database = new db();

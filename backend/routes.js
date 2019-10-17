@@ -18,12 +18,6 @@ router.get('/', (req, res) => {
   res.send('home page');
 });
 
-// router.get('/testdb', (req, res) => {
-//     db.getTest({}).then((result) => {
-//         res.send(JSON.stringify(result));
-//     });
-// });
-
 // Clean up circular jsons
 const getCircularReplacer = () => {
   const seen = new WeakSet();
@@ -48,6 +42,18 @@ router.post('/getListing', (req, res) => {
       var numsections = result.data.explore_tabs[0].sections.length
       res.status(200).send(JSON.stringify(result.data.explore_tabs[0].sections[numsections - 1], getCircularReplacer()));
     });
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).send('Failed to load from Airbnb Microservice')
+  }
+})
+
+// Look under listings for airbnb posts
+router.get('/crimes', async (req, res) => {
+  try{
+    crimeDataService.getCrimeData(req.query.xmin, req.query.xmax, req.query.ymin, req.query.ymax, req.query.year)
+                    .then(result => res.status(200).send(JSON.stringify(result)));
   }
   catch(err){
     console.log(err);
