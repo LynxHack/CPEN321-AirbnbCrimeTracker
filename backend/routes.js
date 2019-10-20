@@ -18,12 +18,6 @@ router.get('/', (req, res) => {
   res.send('home page');
 });
 
-// router.get('/testdb', (req, res) => {
-//     db.getTest({}).then((result) => {
-//         res.send(JSON.stringify(result));
-//     });
-// });
-
 // Clean up circular jsons
 const getCircularReplacer = () => {
   const seen = new WeakSet();
@@ -39,19 +33,52 @@ const getCircularReplacer = () => {
 };
 
 // Look under listings for airbnb posts
+const reverse = require('reverse-geocode')
 router.post('/getListing', (req, res) => {
   try{
-    axios.get(`http://localhost:${pythonport}/${req.body.query}`).then((result)=>{
-      // get listings via
-      // result.data.explore_tabs[0].sections[2].listings[4].listing.lng
-      // result.data.explore_tabs[0].sections[2].listings[4].listing.lat
-      var numsections = result.data.explore_tabs[0].sections.length
-      res.status(200).send(JSON.stringify(result.data.explore_tabs[0].sections[numsections - 1], getCircularReplacer()));
+      var xrange = [Number(req.body['xmin']), Number(req.body['xmax'])];
+      var yrange = [Number(req.body['ymin']), Number(req.body['ymax'])];
+      var coord = [(xrange[0] + xrange[1])/2,(yrange[0] + yrange[1])/2];
+      mainquery = reverse.lookup(coord[0], coord[1], 'ca').city;
+      axios.get(`http://localhost:${pythonport}/${mainquery}`).then((result)=>{
+
+      var len = result.data.explore_tabs[0].sections.length
+      var pruned = result.data.explore_tabs[0].sections[len - 1];
+      pruned = JSON.parse(JSON.stringify(pruned, getCircularReplacer()))
+      pruned.listings.map((x) => {return x.listing});
+      
+      // Filter certain information and also to cap within certain range from lat and long
+      var listingsarr = pruned.listings;
+
+      var arr = []
+      console.log(listingsarr.length);
+      for(let i = 0; i < listingsarr.length; i++){
+        var tmp = {};
+        tmp["id"] = listingsarr[i].listing.id;
+        tmp["lat"] = listingsarr[i].listing.lat;
+        tmp["lng"] = listingsarr[i].listing.lng;
+        tmp["name"] = listingsarr[i].listing.name;
+        tmp["star_rating"] = listingsarr[i].listing.star_rating;
+        tmp["reviews_count"] =listingsarr[i].listing.reviews_count;
+        tmp["person_capacity"] = listingsarr[i].listing.person_capacity;
+        tmp["picture"] = listingsarr[i].listing.picture.picture;
+        tmp["safety_index"] = Math.round(Math.random() * 10); //temporary
+        arr.push(tmp);
+      }
+
+      arr = arr.filter((x) => {
+        return x.lat >= xrange[0] 
+            && x.lat <= xrange[1] 
+            && x.lng >= yrange[0] 
+            && x.lng <= yrange[1];
+      })
+
+      res.status(200).send(JSON.stringify({'listings': arr}));
     });
   }
   catch(err){
     console.log(err);
-    res.status(500).send('Failed to load from Airbnb Microservice')
+    res.status(500).send('Failed to load from Airbnb Microservice');
   }
 })
 

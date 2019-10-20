@@ -13,7 +13,8 @@ def home():
 
 @app.route('/<location>')
 def search(location):
-    result = api.get_homes(location)
+    numlistings = 50
+    result = api.get_homes(location, items_per_grid = numlistings)
     return jsonify(result)
 
 ## Init

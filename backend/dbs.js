@@ -42,6 +42,12 @@ class db {
   createDatabase() {
     var that = this;
     return new Promise(function(resolve, reject) {
+      // that.con.query("DROP DATABASE " + dbName, function(err, result) {
+      //   if (err) {
+      //     reject();
+      //   }
+      // });
+
       that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
         if (err) {
           console.log(err + " while creating database!");
