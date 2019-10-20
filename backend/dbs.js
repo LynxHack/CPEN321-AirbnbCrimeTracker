@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const mysql = require('mysql');
+const latlongToUTM = require('./latlongToUTM');
 
 var dbName = 'crime_data';
 var tableName = 'crime_data';
@@ -42,12 +43,6 @@ class db {
   createDatabase() {
     var that = this;
     return new Promise(function(resolve, reject) {
-      // that.con.query("DROP DATABASE " + dbName, function(err, result) {
-      //   if (err) {
-      //     reject();
-      //   }
-      // });
-
       that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
         if (err) {
           console.log(err + " while creating database!");
@@ -142,7 +137,10 @@ class db {
 
   sendQuery(xmin, xmax, ymin, ymax, year) {
     var that = this;
-    var params = [xmin, xmax, ymin, ymax, year];
+    var mins = latlongToUTM(xmin, ymin);
+    var maxs = latlongToUTM(xmax, ymax);
+    console.log("querying between " + mins[0] + " " + maxs[0] + " and " + mins[1] + " " + maxs[1]);
+    var params = [mins[0], maxs[0], mins[1], maxs[1], year];
 
     var queryString = "SELECT type, year, x, y FROM " + tableName + " WHERE x >= ? AND x <= ? AND y >= ? AND y <= ?";
     if(year) queryString += " AND year >= ?"
