@@ -41,6 +41,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private LatLng currentLocation;
     private final String crimesURL = "10.0.75.2:3000/crimes";
+    private final String airbnbURL = "10.0.75.2:3000/getlistings/:query";
+    private final String testURL = "/";
     private LatLng farLeft;
     private LatLng farRight;
     private LatLng nearLeft;
@@ -89,8 +91,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 farLeft = visibleRegion.farLeft;
-                farRight = visibleRegion.farRight;
-                nearLeft = visibleRegion.nearLeft;
                 nearRight = visibleRegion.nearRight;
 
                 Map<String, String> params = new HashMap<>();
@@ -101,6 +101,106 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 params.put("ymax", Double.toString(farLeft.latitude));
 
                 System.out.println(farLeft);
+
+                CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, airbnbURL, params,
+                        new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+
+                                try {
+                                    // If Airbnb querying fails, Toast the reason why
+                                    /*int success = Integer.parseInt(response.getString("success"));
+
+                                    if(success == 0) {
+                                        String reason = response.getString("fail_reason");
+                                        Toast.makeText(getApplicationContext(), reason, Toast.LENGTH_SHORT).show();
+                                    }
+
+                                    // If Airbnb querying succeeds...
+                                    else {*/
+                                        Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+
+                                        //JSONObject jsonObject = response.getJSONObject("user_info");
+                                        JSONArray listings = response.getJSONArray("Listings");
+
+                                        int numListings = listings.length();
+
+                                        for (int i = 0; i < numListings; i++) {
+
+                                            JSONObject current = listings.getJSONObject(i);
+
+                                            mMap.addMarker(new MarkerOptions().position(new LatLng(current.getDouble("lat"), current.getDouble("lng")))
+                                                    .title(current.getString("name")
+                                                            + "\nMax Occupancy: "+ current.getInt("person_capacity")
+                                                            + "\nRating: " + current.getDouble("star_rating") + " Stars")
+                                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+                                        }
+                                    //}
+
+                                } catch (JSONException e) {
+                                    //problem with receiving JSONObject
+                                    //OR
+                                    //problem with extracting info from JSONObject
+                                    Toast.makeText(getApplicationContext(), "JSON Exception in login activity!!", Toast.LENGTH_SHORT).show();
+                                    e.printStackTrace();
+                                }
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+
+                                if (error == null || error.networkResponse == null) {
+                                    return;
+                                }
+
+                                String body;
+                                //get response body and parse with appropriate encoding
+                                try {
+                                    body = new String(error.networkResponse.data,"UTF-8");
+                                    Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
+
+                                } catch (UnsupportedEncodingException e) {
+                                    //exception handling to be placed here
+                                }
+                            }
+                        });
+
+                VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
+            }
+        });
+    }
+
+    private void userLocation() {
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) {
+            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        }
+    }
+
+    private void thisWillBeDeleted() {
+        mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
+
+                VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+                farLeft = visibleRegion.farLeft;
+                farRight = visibleRegion.farRight;
+                nearLeft = visibleRegion.nearLeft;
+                nearRight = visibleRegion.nearRight;
+
+                Map<String, String> params = new HashMap<>();
+
+                params.put("xmin", Double.toString(farLeft.longitude));
+                params.put("xmax", Double.toString(nearRight.longitude));
+                params.put("ymin", Double.toString(nearRight.latitude));
+                params.put("ymax", Double.toString(farLeft.latitude));
 
                 CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, crimesURL, params,
                         new Response.Listener<JSONObject>() {
@@ -177,17 +277,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
             }
         });
-    }
-
-    private void userLocation() {
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) {
-            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-        }
     }
 }
