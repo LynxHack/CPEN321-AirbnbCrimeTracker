@@ -4,7 +4,7 @@ var express = require('express');
 var router = express.Router();
 const bodyParser = require("body-parser");
 var crimeDataService = require('./CrimeDataService');
-
+const latlongToUTM = require('./latlongToUTM');
 // Middleware
 router.use(bodyParser.urlencoded({extended: true}));
 router.use(require('method-override')('_method'));
@@ -31,10 +31,14 @@ const getCircularReplacer = () => {
     return value;
   };
 };
+var getdist = function(x1,y1,x2,y2){
+  return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
+}
 
 // Look under listings for airbnb posts
 const reverse = require('reverse-geocode')
 router.post('/getListing', (req, res) => {
+  // console.log("Received request" , req)
   try{
       var xrange = [Number(req.body['xmin']), Number(req.body['xmax'])];
       var yrange = [Number(req.body['ymin']), Number(req.body['ymax'])];
@@ -51,7 +55,7 @@ router.post('/getListing', (req, res) => {
       var listingsarr = pruned.listings;
 
       var arr = []
-      console.log(listingsarr.length);
+      // console.log(listingsarr.length);
       for(let i = 0; i < listingsarr.length; i++){
         var tmp = {};
         tmp["id"] = listingsarr[i].listing.id;
@@ -72,8 +76,60 @@ router.post('/getListing', (req, res) => {
             && x.lng >= yrange[0] 
             && x.lng <= yrange[1];
       })
+    
+      // Size of radius to check for crimes
+      var radiuspreset = 10000;
+      crimeDataService.getCrimeData(yrange[0], yrange[1], xrange[0], xrange[1]).then((crimes) => {
+        // console.log(crimes);
+        if(!crimes.length){
+          return;
+        }
 
-      res.status(200).send(JSON.stringify({'listings': arr}));
+
+        for(let i = 0; i < arr.length; i++){
+          var convcoord = latlongToUTM(arr[i].lng, arr[i].lat);
+          var crimecount = crimes.filter((val) => {
+            return getdist(convcoord[0], convcoord[1], val.x, val.y) < radiuspreset;
+          }).length;
+          // console.log(crimecount);
+          if(crimecount < 50){
+            arr[i].safety_index = 10;
+          }
+          else if(crimecount < 100){
+            arr[i].safety_index = 9;
+          }
+          else if(crimecount < 200){
+            arr[i].safety_index = 8;
+          }
+          else if(crimecount < 300){
+            arr[i].safety_index = 7;
+          }
+          else if(crimecount < 600){
+            arr[i].safety_index = 6;
+          }
+          else if(crimecount < 900){
+            arr[i].safety_index = 5;
+          }
+          else if(crimecount < 1200){
+            arr[i].safety_index = 4;
+          }
+          else if(crimecount < 1500){
+            arr[i].safety_index = 3;
+          }
+          else if(crimecount < 1800){
+            arr[i].safety_index = 2;
+          }
+          else if(crimecount < 2000){
+            arr[i].safety_index = 1;
+          }
+          else{
+            arr[i].safety_index = 0;
+          }
+        }
+              
+        res.status(200).send(JSON.stringify({'listings': arr}));
+      });
+
     });
   }
   catch(err){

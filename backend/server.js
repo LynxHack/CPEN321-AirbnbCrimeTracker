@@ -3,7 +3,6 @@ require('dotenv').config();
 // Express Params
 const express = require("express");
 const app = express();
-const db = require('./dbs');
 const crimeDataService = require('./CrimeDataService');
 const PORT = 3000;
 

@@ -1,6 +1,5 @@
 /* adapted from http://home.hiwaay.net/~taylorc/toolbox/geography/geoutm.html*/
 
-    <!--
 
     var pi = 3.14159265358979;
 
@@ -472,17 +471,17 @@
     {
         var xy = new Array(2);
 
-        if(typeof lon != "integer") {
-          var long = parseInt(lon);
-        } else {
-          var long = lon;
-        }
+        // if(typeof lon != "integer") {
+          var long = parseFloat(lon);
+        // } else {
+        //   var long = parseFloat(lon);
+        // }
 
-        if(typeof lat != "integer") {
-          var lati = parseInt(lat);
-        } else {
-          var lati = lat;
-        }
+        // if(typeof lat != "integer") {
+        //   var lati = parseFloat(lat);
+        // } else {
+          var lati = parseFloat(lat);
+        // }
         // Compute the UTM zone.
         zone = Math.floor ((long + 180.0) / 6) + 1;
 

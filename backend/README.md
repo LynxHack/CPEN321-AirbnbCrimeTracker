@@ -32,3 +32,15 @@ or
 ```
 npm start
 ```
+
+## Connecting from a test android device to a computer
+
+Linux / OSX
+
+Run in terminal
+
+```
+ifconfig | grep "inet " | grep -v 127.0.0.1
+```
+
+for device IP address to use instead of localhost
