@@ -71,8 +71,8 @@ router.get('/getListing', (req, res) => {
         tmp["reviews_count"] =listingsarr[i].listing.reviews_count;
         tmp["person_capacity"] = listingsarr[i].listing.person_capacity;
         tmp["picture"] = listingsarr[i].listing.picture.picture;
-        tmp["safety_index"] = Math.round(Math.random() * 10); //temporary
-        console.log(tmp);
+        tmp["safety_index"] = 1;
+        // console.log(tmp);
         arr.push(tmp);
       }
       // console.log("Finished this")
@@ -85,8 +85,8 @@ router.get('/getListing', (req, res) => {
     
       // Size of radius to check for crimes
       var radiuspreset = 10000;
-      crimeDataService.getCrimeData(yrange[0], yrange[1], xrange[0], xrange[1]).then((crimes) => {
-        // console.log(crimes);
+      crimeDataService.getCrimeData(yrange[0] - 0.2, yrange[1] + 0.2, xrange[0] - 0.2, xrange[1] + 0.2).then((crimes) => {
+        console.log(crimes);
         if(!crimes.length){
           return;
         }
@@ -96,7 +96,7 @@ router.get('/getListing', (req, res) => {
           var crimecount = crimes.filter((val) => {
             return getdist(convcoord[0], convcoord[1], val.x, val.y) < radiuspreset;
           }).length;
-          // console.log(crimecount);
+          console.log(crimecount);
           if(crimecount < 50){
             arr[i].safety_index = 10;
           }
@@ -132,7 +132,7 @@ router.get('/getListing', (req, res) => {
           }
         }
       });
-      console.log(arr);
+      // console.log(arr);
       res.status(200).send(JSON.stringify({"Listings" : arr}));
     });
   }
