@@ -85,8 +85,8 @@ router.get('/getListing', (req, res) => {
     
       // Size of radius to check for crimes
       var radiuspreset = 10000;
-      crimeDataService.getCrimeData(yrange[0] - 0.2, yrange[1] + 0.2, xrange[0] - 0.2, xrange[1] + 0.2).then((crimes) => {
-        console.log(crimes);
+      crimeDataService.getCrimeData(-123.3, -123, 49, 49.5).then((crimes) => {
+        // console.log(crimes);
         if(!crimes.length){
           return;
         }
@@ -96,7 +96,7 @@ router.get('/getListing', (req, res) => {
           var crimecount = crimes.filter((val) => {
             return getdist(convcoord[0], convcoord[1], val.x, val.y) < radiuspreset;
           }).length;
-          console.log(crimecount);
+          // console.log(crimecount);
           if(crimecount < 50){
             arr[i].safety_index = 10;
           }
@@ -131,9 +131,10 @@ router.get('/getListing', (req, res) => {
             arr[i].safety_index = 0;
           }
         }
+        // console.log(arr);
+        res.status(200).send(JSON.stringify({"Listings" : arr}));
       });
-      // console.log(arr);
-      res.status(200).send(JSON.stringify({"Listings" : arr}));
+
     });
   }
   catch(err){
