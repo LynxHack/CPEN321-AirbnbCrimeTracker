@@ -36,7 +36,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -47,9 +49,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final String crimesURL = "10.0.75.2:3000/crimes";
     private final String airbnbURL = "http://192.168.1.69/getlistings";
     private final String testURL = "/";
+    private List<LatLng> markerList = new ArrayList<LatLng>();
     private LatLng farLeft;
-    private LatLng farRight;
-    private LatLng nearLeft;
     private LatLng nearRight;
 
     @Override
@@ -260,7 +261,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                params.put("xmax", Double.toString(nearRight.longitude));
 //                params.put("ymin", Double.toString(nearRight.latitude));
 //                params.put("ymax", Double.toString(farLeft.latitude));
-                String url = "http://192.168.1.69:3000/getListing/".concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude))+"&ymax=".concat(Double.toString(farLeft.latitude));
+                String url = "http://34.221.117.161:3000/getListing/".concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude))+"&ymax=".concat(Double.toString(farLeft.latitude));
                 System.out.println(url);
                 CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, url, null,
                         new Response.Listener<JSONObject>() {
@@ -289,20 +290,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         for (int i = 0; i < numListings; i++) {
 
                                             JSONObject current = listings.getJSONObject(i);
-                                            int safety_index = current.getInt("safety_index");
-                                            float markerColour;
 
-                                            if (safety_index > 6)
-                                                markerColour = BitmapDescriptorFactory.HUE_GREEN;
-                                            else if (safety_index > 4)
-                                                markerColour = BitmapDescriptorFactory.HUE_YELLOW;
-                                            else markerColour = BitmapDescriptorFactory.HUE_RED;
+                                            LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
 
-                                            mMap.addMarker(new MarkerOptions().position(new LatLng(current.getDouble("lat"), current.getDouble("lng")))
-                                                    .title(current.getString("name")
-                                                            + "\nMax Occupancy: "+ current.getInt("person_capacity")
-                                                            + "\nRating: " + current.getDouble("star_rating") + " Stars")
-                                                    .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+                                            if (!markerList.contains(coords)) {
+
+                                                int safety_index = current.getInt("safety_index");
+                                                float markerColour;
+
+                                                if (safety_index > 6)
+                                                    markerColour = BitmapDescriptorFactory.HUE_GREEN;
+                                                else if (safety_index > 4)
+                                                    markerColour = BitmapDescriptorFactory.HUE_YELLOW;
+                                                else markerColour = BitmapDescriptorFactory.HUE_RED;
+
+                                                mMap.addMarker(new MarkerOptions().position(coords)
+                                                        .title(current.getString("name")
+                                                                + "\nMax Occupancy: " + current.getInt("person_capacity")
+                                                                + "\nRating: " + current.getDouble("star_rating") + " Stars")
+                                                        .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+
+                                                markerList.add(coords);
+                                            }
 
                                         }
                                     //}
