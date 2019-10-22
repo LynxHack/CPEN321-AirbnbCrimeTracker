@@ -187,7 +187,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         String city = "burnaby";
 
-        String searchURL = googleURL + city + googleSearchKey;
+        // Replace spaces with space ASCII code
+        String searchURL = googleURL + city.replace(" ", "%20") + googleSearchKey;
 
         CustomRequest jsObjRequest = new CustomRequest(Request.Method.POST, searchURL, null,
                 new Response.Listener<JSONObject>() {
