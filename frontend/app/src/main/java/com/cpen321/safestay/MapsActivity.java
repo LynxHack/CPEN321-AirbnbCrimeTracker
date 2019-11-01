@@ -110,7 +110,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onSearchConfirmed(CharSequence text) {
-                startSearch(text.toString(), true, null, true);
+                //startSearch(text.toString(), true, null, true);
+                searchCity(text.toString());
             }
 
             @Override
@@ -134,7 +135,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
-                        .setTypeFilter(TypeFilter.ADDRESS).setSessionToken(token).setQuery(charSequence.toString())
+                        .setTypeFilter(TypeFilter.CITIES).setSessionToken(token).setQuery(charSequence.toString())
                         .build();
                 placesClient.findAutocompletePredictions(predictionsRequest).addOnCompleteListener(new OnCompleteListener<FindAutocompletePredictionsResponse>() {
                     @Override
@@ -284,10 +285,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void searchCity() {
-
-        String city = "burnaby";
-
+    private void searchCity(String city) {
         // Replace spaces with space ASCII code
         String searchURL = googleURL + city.replace(" ", "%20") + googleSearchKey;
 
@@ -306,7 +304,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             //problem with receiving JSONObject
                             //OR
                             //problem with extracting info from JSONObject
-                            Toast.makeText(getApplicationContext(), "JSON Exception in login activity!!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                     }
@@ -314,7 +312,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Some kind of error", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
                         if (error == null || error.networkResponse == null) {
                             return;
                         }
