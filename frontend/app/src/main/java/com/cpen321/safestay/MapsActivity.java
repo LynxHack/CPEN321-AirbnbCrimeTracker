@@ -6,6 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -15,11 +16,13 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -29,9 +32,20 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
+
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.libraries.places.api.model.AutocompletePrediction;
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
+import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.mancj.materialsearchbar.MaterialSearchBar;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -41,6 +55,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private LocationManager locationManager;
+    private PlacesClient placesClient;
+    private List<AutocompletePrediction> predictionList;
+
+    private Location mLastKnownLocation;
+    private LocationCallback locationCallback;
+
+    private MaterialSearchBar materialSearchBar;
+    private View mapView;
+
     private LatLng currentLocation;
     private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
@@ -61,6 +84,82 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // For user's current location
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         userLocation();
+
+        // Initialize Places.
+        Places.initialize(MapsActivity.this, googleSearchKey);
+
+        // Create a new Places client instance.
+        placesClient = Places.createClient(this);
+        final AutocompleteSessionToken token = AutocompleteSessionToken.newInstance();
+        materialSearchBar = findViewById(R.id.searchBar);
+
+        materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
+            @Override
+            public void onSearchStateChanged(boolean enabled) {
+
+            }
+
+            @Override
+            public void onSearchConfirmed(CharSequence text) {
+                startSearch(text.toString(), true, null, true);
+            }
+
+            @Override
+            public void onButtonClicked(int buttonCode) {
+                if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
+
+                }
+
+                else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
+                    materialSearchBar.disableSearch();
+                }
+            }
+        });
+
+        materialSearchBar.addTextChangeListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
+                        .setTypeFilter(TypeFilter.ADDRESS).setSessionToken(token).setQuery(charSequence.toString())
+                        .build();
+                placesClient.findAutocompletePredictions(predictionsRequest).addOnCompleteListener(new OnCompleteListener<FindAutocompletePredictionsResponse>() {
+                    @Override
+                    public void onComplete(@NonNull Task<FindAutocompletePredictionsResponse> task) {
+                        if (task.isSuccessful()) {
+                            FindAutocompletePredictionsResponse predictionsResponse = task.getResult();
+
+                            if (predictionsResponse != null) {
+                                predictionList = predictionsResponse.getAutocompletePredictions();
+                                List<String> suggestionsList = new ArrayList<>();
+                                for (AutocompletePrediction prediction : predictionList) {
+                                    suggestionsList.add(prediction.getFullText(null).toString());
+                                }
+                                materialSearchBar.updateLastSuggestions(suggestionsList);
+
+                                if (!materialSearchBar.isSuggestionsVisible()) {
+                                    materialSearchBar.showSuggestionsList();
+                                }
+                            }
+                        }
+
+                        else {
+                            // Log error
+                            System.out.println("FAILURE");
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
     }
 
 
