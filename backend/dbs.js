@@ -35,7 +35,9 @@ class Db {
 
   initializeDb() {
     var that = this;
-    return that.createDatabase().then(value => { that.createTable(); });
+    return that.createDatabase().then(value => {
+      that.createTable();
+    });
   }
 
   createDatabase() {
@@ -82,7 +84,7 @@ class Db {
     return new Promise(function(resolve, reject) {
       console.log("Loading Crime data into table...");
       console.time("dataLoad");
-      that.con.query("LOAD DATA LOCAL INFILE "" + fileName + "" INTO TABLE crime_data FIELDS TERMINATED BY "," ENCLOSED BY "\""", function(err, result) {
+      that.con.query("LOAD DATA LOCAL INFILE '" + fileName + "' INTO TABLE crime_data FIELDS TERMINATED BY ',' ENCLOSED BY '\"'", function(err, result) {
         if (err) {
           console.log(err + " while loading crime data into table!");
           console.timeEnd("dataLoad");

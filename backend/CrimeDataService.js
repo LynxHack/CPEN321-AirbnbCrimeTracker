@@ -9,9 +9,10 @@ const EPOCH_HOUR = EPOCH_MIN * 60;
 const EPOCH_DAY = EPOCH_HOUR * 24;
 const EPOCH_WEEK = EPOCH_DAY * 7;
 
-var COVurl = "geodash.vpd.ca";
-var path = "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41";
-var fileName = "crimedata_csv_all_years.csv";
+const COVurl = "geodash.vpd.ca";
+const path = "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41";
+const fileName = "crimedata_csv_all_years.csv";
+const zipFile = "crimedata.zip";
 var cache = null;
 
 class CrimeDataService {
@@ -53,7 +54,7 @@ class CrimeDataService {
   updateCrimeDataSet() {
     var that = this;
     return new Promise(function(resolve, reject) {
-      const output = fs.createWriteStream("crimedata.zip");
+      const output = fs.createWriteStream(zipFile);
       output.on("finish", () => {
         that.unzipFile().then((result) => {
           db.loadTable();
