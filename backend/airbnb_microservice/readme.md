@@ -15,7 +15,7 @@ Working in virtualenv
 
 ### API Documentation
 
-https://github.com/nderkach/airbnb-python
+<https://github.com/nderkach/airbnb-python>
 
 ## Running Via Docker Individually
 

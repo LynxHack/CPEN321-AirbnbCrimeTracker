@@ -1,20 +1,20 @@
-require('dotenv').config()
+require("dotenv").config();
 
-const mysql = require('mysql');
-const latlongToUTM = require('./latlongToUTM');
+const mysql = require("mysql");
+const latlongToUTM = require("./latlongToUTM");
 
-var dbName = 'crime_data';
-var tableName = 'crime_data';
-var fileName = 'crimedata_csv_all_years.csv';
+var dbName = "crime_data";
+var tableName = "crime_data";
+var fileName = "crimedata_csv_all_years.csv";
 
 var dbConfig = {
   host: "localhost",
   user: "root",
   password: "password",
-  port: '3306'
+  port: "3306"
 };
 
-class db {
+class Db {
   constructor() {
     this.con = mysql.createConnection(dbConfig);
 
@@ -26,10 +26,8 @@ class db {
       console.log("Connected to Database!");
     });
 
-    this.con.on('error', function(err) {
-      if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        setTimeout(handleDisconnect, 2000);
-      } else {
+    this.con.on("error", function(err) {
+      if (err.code === "PROTOCOL_CONNECTION_LOST") {
         throw err;
       }
     });
@@ -37,12 +35,13 @@ class db {
 
   initializeDb() {
     var that = this;
-    return that.createDatabase().then(value => that.createTable());
+    return that.createDatabase().then(value => { that.createTable(); });
   }
 
   createDatabase() {
     var that = this;
     return new Promise(function(resolve, reject) {
+
       that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
         if (err) {
           console.log(err + " while creating database!");
@@ -82,15 +81,15 @@ class db {
     var that = this;
     return new Promise(function(resolve, reject) {
       console.log("Loading Crime data into table...");
-      console.time('dataLoad');
-      that.con.query("LOAD DATA LOCAL INFILE '" + fileName + "' INTO TABLE crime_data FIELDS TERMINATED BY ',' ENCLOSED BY '\"'", function(err, result) {
+      console.time("dataLoad");
+      that.con.query("LOAD DATA LOCAL INFILE "" + fileName + "" INTO TABLE crime_data FIELDS TERMINATED BY "," ENCLOSED BY "\""", function(err, result) {
         if (err) {
           console.log(err + " while loading crime data into table!");
-          console.timeEnd('dataLoad');
+          console.timeEnd("dataLoad");
           reject();
         } else {
           console.log("Crime data loaded into table");
-          console.timeEnd('dataLoad');
+          console.timeEnd("dataLoad");
           resolve();
         }
       });
@@ -115,9 +114,8 @@ class db {
     this.con.query("SELECT * FROM " + tableName + " LIMIT 5", function(err, result) {
       if (err) {
         console.log(err + " while loading table!");
-        reject();
       }
-      console.log("Printing first 5 rows of table...\n")
+      console.log("Printing first 5 rows of table...\n");
       console.log(result);
     });
   }
@@ -143,7 +141,9 @@ class db {
     var params = [mins[0], maxs[0], mins[1], maxs[1], year];
 
     var queryString = "SELECT type, year, x, y FROM " + tableName + " WHERE x >= ? AND x <= ? AND y >= ? AND y <= ?";
-    if(year) queryString += " AND year >= ?"
+    if (year) {
+      queryString += " AND year >= ?";
+    }
     return new Promise(function(resolve, reject) {
       that.con.query(queryString, params, function(err, result) {
         if (err) {
@@ -156,5 +156,5 @@ class db {
   }
 }
 
-var database = new db();
+var database = new Db();
 module.exports = database;

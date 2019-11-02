@@ -12,35 +12,35 @@
 
 
     /*
-    * DegToRad
+    * degToRad
     *
     * Converts degrees to radians.
     *
     */
-    function DegToRad (deg)
+    function degToRad (deg)
     {
-        return (deg / 180.0 * pi)
+        return (deg / 180.0 * pi);
     }
 
 
 
 
     /*
-    * RadToDeg
+    * radToDeg
     *
     * Converts radians to degrees.
     *
     */
-    function RadToDeg (rad)
+    function radToDeg (rad)
     {
-        return (rad / pi * 180.0)
+        return (rad / pi * 180.0);
     }
 
 
 
 
     /*
-    * ArcLengthOfMeridian
+    * arcLengthOfMeridian
     *
     * Computes the ellipsoidal distance from the equator to a point at a
     * given latitude.
@@ -59,7 +59,7 @@
     *     The ellipsoidal distance of the point from the equator, in meters.
     *
     */
-    function ArcLengthOfMeridian (phi)
+    function arcLengthOfMeridian (phi)
     {
         var alpha, beta, gamma, delta, epsilon, n;
         var result;
@@ -99,7 +99,7 @@
 
 
     /*
-    * UTMCentralMeridian
+    * utmCentralMeridian
     *
     * Determines the central meridian for the given UTM zone.
     *
@@ -112,11 +112,11 @@
     *   Range of the central meridian is the radian equivalent of [-177,+177].
     *
     */
-    function UTMCentralMeridian (zone)
+    function utmCentralMeridian (zone)
     {
         var cmeridian;
 
-        cmeridian = DegToRad (-183.0 + (zone * 6.0));
+        cmeridian = degToRad (-183.0 + (zone * 6.0));
 
         return cmeridian;
     }
@@ -124,9 +124,9 @@
 
 
     /*
-    * FootpointLatitude
+    * footPointLatitude
     *
-    * Computes the footpoint latitude for use in converting transverse
+    * Computes the footPoint latitude for use in converting transverse
     * Mercator coordinates to ellipsoidal coordinates.
     *
     * Reference: Hoffmann-Wellenhof, B., Lichtenegger, H., and Collins, J.,
@@ -136,10 +136,10 @@
     *   y - The UTM northing coordinate, in meters.
     *
     * Returns:
-    *   The footpoint latitude, in radians.
+    *   The footPoint latitude, in radians.
     *
     */
-    function FootpointLatitude (y)
+    function footPointLatitude (y)
     {
         var y_, alpha_, beta_, gamma_, delta_, epsilon_, n;
         var result;
@@ -182,7 +182,7 @@
 
 
     /*
-    * MapLatLonToXY
+    * mapLatLonToXY
     *
     * Converts a latitude/longitude pair to x and y coordinates in the
     * Transverse Mercator projection.  Note that Transverse Mercator is not
@@ -204,7 +204,7 @@
     *    The function does not return a value.
     *
     */
-    function MapLatLonToXY (phi, lambda, lambda0, xy)
+    function mapLatLonToXY  (phi, lambda, lambda0, xy)
     {
         var N, nu2, ep2, t, t2, l;
         var l3coef, l4coef, l5coef, l6coef, l7coef, l8coef;
@@ -252,7 +252,7 @@
             + (N / 5040.0 * Math.pow (Math.cos (phi), 7.0) * l7coef * Math.pow (l, 7.0));
 
         /* Calculate northing (y) */
-        xy[1] = ArcLengthOfMeridian (phi)
+        xy[1] = arcLengthOfMeridian (phi)
             + (t / 2.0 * N * Math.pow (Math.cos (phi), 2.0) * Math.pow (l, 2.0))
             + (t / 24.0 * N * Math.pow (Math.cos (phi), 4.0) * l4coef * Math.pow (l, 4.0))
             + (t / 720.0 * N * Math.pow (Math.cos (phi), 6.0) * l6coef * Math.pow (l, 6.0))
@@ -264,7 +264,7 @@
 
 
     /*
-    * MapXYToLatLon
+    * mapXYToLatLon
     *
     * Converts x and y coordinates in the Transverse Mercator projection to
     * a latitude/longitude pair.  Note that Transverse Mercator is not
@@ -287,21 +287,21 @@
     *
     * Remarks:
     *   The local variables Nf, nuf2, tf, and tf2 serve the same purpose as
-    *   N, nu2, t, and t2 in MapLatLonToXY, but they are computed with respect
-    *   to the footpoint latitude phif.
+    *   N, nu2, t, and t2 in mapLatLonToXY , but they are computed with respect
+    *   to the footPoint latitude phif.
     *
     *   x1frac, x2frac, x2poly, x3poly, etc. are to enhance readability and
     *   to optimize computations.
     *
     */
-    function MapXYToLatLon (x, y, lambda0, philambda)
+    function mapXYToLatLon (x, y, lambda0, philambda)
     {
         var phif, Nf, Nfpow, nuf2, ep2, tf, tf2, tf4, cf;
         var x1frac, x2frac, x3frac, x4frac, x5frac, x6frac, x7frac, x8frac;
         var x2poly, x3poly, x4poly, x5poly, x6poly, x7poly, x8poly;
 
-        /* Get the value of phif, the footpoint latitude. */
-        phif = FootpointLatitude (y);
+        /* Get the value of phif, the footPoint latitude. */
+        phif = footPointLatitude (y);
 
         /* Precalculate ep2 */
         ep2 = (Math.pow (sm_a, 2.0) - Math.pow (sm_b, 2.0))
@@ -354,12 +354,12 @@
         x3poly = -1.0 - 2 * tf2 - nuf2;
 
         x4poly = 5.0 + 3.0 * tf2 + 6.0 * nuf2 - 6.0 * tf2 * nuf2
-        	- 3.0 * (nuf2 *nuf2) - 9.0 * tf2 * (nuf2 * nuf2);
+         - 3.0 * (nuf2 *nuf2) - 9.0 * tf2 * (nuf2 * nuf2);
 
         x5poly = 5.0 + 28.0 * tf2 + 24.0 * tf4 + 6.0 * nuf2 + 8.0 * tf2 * nuf2;
 
         x6poly = -61.0 - 90.0 * tf2 - 45.0 * tf4 - 107.0 * nuf2
-        	+ 162.0 * tf2 * nuf2;
+         + 162.0 * tf2 * nuf2;
 
         x7poly = -61.0 - 662.0 * tf2 - 1320.0 * tf4 - 720.0 * (tf4 * tf2);
 
@@ -367,15 +367,15 @@
 
         /* Calculate latitude */
         philambda[0] = phif + x2frac * x2poly * (x * x)
-        	+ x4frac * x4poly * Math.pow (x, 4.0)
-        	+ x6frac * x6poly * Math.pow (x, 6.0)
-        	+ x8frac * x8poly * Math.pow (x, 8.0);
+         + x4frac * x4poly * Math.pow (x, 4.0)
+         + x6frac * x6poly * Math.pow (x, 6.0)
+         + x8frac * x8poly * Math.pow (x, 8.0);
 
         /* Calculate longitude */
         philambda[1] = lambda0 + x1frac * x
-        	+ x3frac * x3poly * Math.pow (x, 3.0)
-        	+ x5frac * x5poly * Math.pow (x, 5.0)
-        	+ x7frac * x7poly * Math.pow (x, 7.0);
+         + x3frac * x3poly * Math.pow (x, 3.0)
+         + x5frac * x5poly * Math.pow (x, 5.0)
+         + x7frac * x7poly * Math.pow (x, 7.0);
 
         return;
     }
@@ -384,7 +384,7 @@
 
 
     /*
-    * LatLonToUTMXY
+    * latLonToUTMXY
     *
     * Converts a latitude/longitude pair to x and y coordinates in the
     * Universal Transverse Mercator projection.
@@ -403,9 +403,9 @@
     *   The UTM zone used for calculating the values of x and y.
     *
     */
-    function LatLonToUTMXY (lat, lon, zone, xy)
+    function latLonToUTMXY (lat, lon, zone, xy)
     {
-        MapLatLonToXY (lat, lon, UTMCentralMeridian (zone), xy);
+        mapLatLonToXY  (lat, lon, utmCentralMeridian (zone), xy);
 
         /* Adjust easting and northing for UTM system. */
         xy[0] = xy[0] * UTMScaleFactor + 500000.0;
@@ -419,27 +419,27 @@
 
 
     /*
-    * UTMXYToLatLon
+    * utmXYToLatLon
     *
     * Converts x and y coordinates in the Universal Transverse Mercator
     * projection to a latitude/longitude pair.
     *
     * Inputs:
-    *	x - The easting of the point, in meters.
-    *	y - The northing of the point, in meters.
-    *	zone - The UTM zone in which the point lies.
-    *	southhemi - True if the point is in the southern hemisphere;
+    * x - The easting of the point, in meters.
+    * y - The northing of the point, in meters.
+    * zone - The UTM zone in which the point lies.
+    * southhemi - True if the point is in the southern hemisphere;
     *               false otherwise.
     *
     * Outputs:
-    *	latlon - A 2-element array containing the latitude and
+    * latlon - A 2-element array containing the latitude and
     *            longitude of the point, in radians.
     *
     * Returns:
-    *	The function does not return a value.
+    * The function does not return a value.
     *
     */
-    function UTMXYToLatLon (x, y, zone, southhemi, latlon)
+    function utmXYToLatLon (x, y, zone, southhemi, latlon)
     {
         var cmeridian;
 
@@ -447,13 +447,12 @@
         x /= UTMScaleFactor;
 
         /* If in southern hemisphere, adjust y accordingly. */
-        if (southhemi)
         y -= 10000000.0;
 
         y /= UTMScaleFactor;
 
-        cmeridian = UTMCentralMeridian (zone);
-        MapXYToLatLon (x, y, cmeridian, latlon);
+        cmeridian = utmCentralMeridian (zone);
+        mapXYToLatLon (x, y, cmeridian, latlon);
 
         return;
     }
@@ -483,61 +482,10 @@
           var lati = parseFloat(lat);
         // }
         // Compute the UTM zone.
-        zone = Math.floor ((long + 180.0) / 6) + 1;
+        var zone = Math.floor ((long + 180.0) / 6) + 1;
 
-        zone = LatLonToUTMXY (DegToRad (lati), DegToRad (long), zone, xy);
+        zone = latLonToUTMXY (degToRad (lati), degToRad (long), zone, xy);
 
         return xy;
     }
 module.exports = btnToUTM_OnClick;
-
-    /*
-    * btnToGeographic_OnClick
-    *
-    * Called when the btnToGeographic button is clicked.
-    *
-    */
-    // function btnToGeographic_OnClick ()
-    // {
-    //     latlon = new Array(2);
-    //     var x, y, zone, southhemi;
-    //
-    //     if (isNaN (parseFloat (document.frmConverter.txtX.value))) {
-    //         alert ("Please enter a valid easting in the x field.");
-    //         return false;
-    //     }
-    //
-    //     x = parseFloat (document.frmConverter.txtX.value);
-    //
-    //     if (isNaN (parseFloat (document.frmConverter.txtY.value))) {
-    //         alert ("Please enter a valid northing in the y field.");
-    //         return false;
-    //     }
-    //
-    //     y = parseFloat (document.frmConverter.txtY.value);
-    //
-    //     if (isNaN (parseInt (document.frmConverter.txtZone.value))) {
-    //         alert ("Please enter a valid UTM zone in the zone field.");
-    //         return false;
-    //     }
-    //
-    //     zone = parseFloat (document.frmConverter.txtZone.value);
-    //
-    //     if ((zone < 1) || (60 < zone)) {
-    //         alert ("The UTM zone you entered is out of range.  " +
-    //                "Please enter a number in the range [1, 60].");
-    //         return false;
-    //     }
-    //
-    //     if (document.frmConverter.rbtnHemisphere[1].checked == true)
-    //         southhemi = true;
-    //     else
-    //         southhemi = false;
-    //
-    //     UTMXYToLatLon (x, y, zone, southhemi, latlon);
-    //
-    //     document.frmConverter.txtLongitude.value = RadToDeg (latlon[1]);
-    //     document.frmConverter.txtLatitude.value = RadToDeg (latlon[0]);
-    //
-    //     return true;
-    // }
