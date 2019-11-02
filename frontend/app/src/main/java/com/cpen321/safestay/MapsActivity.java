@@ -1,6 +1,6 @@
 package com.cpen321.safestay;
 
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.RetryPolicy;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,12 +12,10 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -48,15 +46,9 @@ import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRe
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -72,9 +64,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private View mapView;
 
     private LatLng currentLocation;
-    private final String crimesURL = "10.0.75.2:3000/crimes";
-    private final String airbnbURL = "http://192.168.1.69/getlistings";
-    private final String testURL = "/";
+    private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
     private List<LatLng> markerList = new ArrayList<LatLng>();
@@ -180,7 +170,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // If user gives permission for current location, zoom in on their coordinates
         if (currentLocation != null) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 13.0f));
-            //searchCity();
         }
 
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
@@ -198,7 +187,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 params.put("ymin", Double.toString(nearRight.latitude));
                 params.put("ymax", Double.toString(farLeft.latitude));*/
 
-                String url = "http://34.221.117.161:3000/getListing/".concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
+                String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
                 System.out.println(url);
                 CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, url, null,
                         new Response.Listener<JSONObject>() {
@@ -267,6 +256,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 }
                             }
                         });
+
+                jsObjRequest.setRetryPolicy(new RetryPolicy() {
+                    @Override
+                    public int getCurrentTimeout() {
+                        return 100000;
+                    }
+
+                    @Override
+                    public int getCurrentRetryCount() {
+                        return 100000;
+                    }
+
+                    @Override
+                    public void retry(VolleyError error) throws VolleyError {
+
+                    }
+                });
 
                 VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
             }
