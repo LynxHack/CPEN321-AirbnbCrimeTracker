@@ -36,7 +36,7 @@ wait_for()
             nc -z "$WAITFORIT_HOST" "$WAITFORIT_PORT"
             WAITFORIT_result=$?
         else
-            (echo > /dev/tcp/"$WAITFORIT_HOST"/""$WAITFORIT_PORT"") >/dev/null 2>&1
+            (echo > /dev/tcp/"$WAITFORIT_HOST"/"$WAITFORIT_PORT") >/dev/null 2>&1
             WAITFORIT_result=$?
         fi
         if [[ $WAITFORIT_result -eq 0 ]]; then
@@ -53,9 +53,9 @@ wait_for_wrapper()
 {
     # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
     if [[ "$WAITFORIT_QUIET" -eq 1 ]]; then
-        timeout "$WAITFORIT_BUSYTIMEFLAG" "$WAITFORIT_TIMEOUT" $0 --quiet --child --host="$WAITFORIT_HOST" --port="$WAITFORIT_PORT" --timeout="$WAITFORIT_TIMEOUT" &
+        timeout "$WAITFORIT_BUSYTIMEFLAG" "$WAITFORIT_TIMEOUT" "$0" --quiet --child --host="$WAITFORIT_HOST" --port="$WAITFORIT_PORT" --timeout="$WAITFORIT_TIMEOUT" &
     else
-        timeout "$WAITFORIT_BUSYTIMEFLAG" "$WAITFORIT_TIMEOUT" $0 --child --host="$WAITFORIT_HOST" --port="$WAITFORIT_PORT" --timeout="$WAITFORIT_TIMEOUT" &
+        timeout "$WAITFORIT_BUSYTIMEFLAG" "$WAITFORIT_TIMEOUT" "$0" --child --host="$WAITFORIT_HOST" --port="$WAITFORIT_PORT" --timeout="$WAITFORIT_TIMEOUT" &
     fi
     WAITFORIT_PID=$!
     trap "kill -INT -$WAITFORIT_PID" INT
@@ -169,7 +169,7 @@ fi
 
 if [[ $WAITFORIT_CLI != "" ]]; then
     if [[ $WAITFORIT_RESULT -ne 0 && $WAITFORIT_STRICT -eq 1 ]]; then
-        echoerr ""$WAITFORIT_cmdname": strict mode, refusing to execute subprocess"
+        echoerr "$WAITFORIT_cmdname: strict mode, refusing to execute subprocess"
         exit $WAITFORIT_RESULT
     fi
     exec "${WAITFORIT_CLI[@]}"
