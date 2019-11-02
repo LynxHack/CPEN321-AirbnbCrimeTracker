@@ -25,7 +25,7 @@ const getCircularReplacer = () => {
   return (key, value) => {
     if (typeof value === "object" && value !== null) {
       if (seen.has(value)) {
-        return;
+        return null;
       }
       seen.add(value);
     }
@@ -99,7 +99,7 @@ router.get("/getListing", (req, res) => {
         console.log("Finished this crime");
         for(let i = 0; i < arr.length; i++){
           var convcoord = latlongToUTM(arr[i].lng, arr[i].lat);
-          var crimecount = crimes.filter((val) => { filterCrimes(val, convcoord); }).length;
+          var crimecount = crimes.filter((val) => filterCrimes(val, convcoord)).length;
           // console.log(crimecount);
           if(crimecount < 50){
             arr[i].safety_index = 10;
@@ -145,17 +145,17 @@ router.get("/getListing", (req, res) => {
     console.log(err);
     res.status(500).send("Failed to load from Airbnb Microservice");
   }
-})
+});
 
 // Look under listings for airbnb posts
 router.get("/crimes", async (req, res) => {
   try {
     crimeDataService.getCrimeData(req.query.xmin, req.query.xmax, req.query.ymin, req.query.ymax, req.query.year)
-                    .then(result => res.status(200).send(JSON.stringify(result)));
+                    .then((result) => res.status(200).send(JSON.stringify(result)));
   } catch(err) {
     console.log(err);
-    res.status(500).send("Failed to load from Airbnb Microservice")
+    res.status(500).send("Failed to load from Airbnb Microservice");
   }
-})
+});
 
 module.exports = router;

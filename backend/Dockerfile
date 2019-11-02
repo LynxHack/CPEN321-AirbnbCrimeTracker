@@ -21,7 +21,8 @@ RUN chmod +x /wait-for-it.sh
 # Python
 RUN apt-get update -y
 RUN apt-get install -y --no-install-recommends python-pip python-dev build-essential
-apt-get clean && rm -rf /var/lib/apt/lists/*
+apt-get clean
+rm -rf /var/lib/apt/lists/*
 COPY . /app
 WORKDIR /app
 RUN pip install -r ./airbnb_microservice/requirements.txt
