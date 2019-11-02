@@ -35,7 +35,7 @@ class Db {
 
   initializeDb() {
     var that = this;
-    return that.createDatabase().then(value => {
+    return that.createDatabase().then((value) => {
       that.createTable();
     });
   }
