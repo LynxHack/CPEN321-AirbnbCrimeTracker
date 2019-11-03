@@ -20,10 +20,10 @@ class Db {
 
     this.con.connect(function(err) {
       if (err) {
-        console.log(err + " while connecting to mysql!");
+        //console.log(err + " while connecting to mysql!");
         throw err;
       }
-      console.log("Connected to Database!");
+      //console.log("Connected to Database!");
     });
 
     this.con.on("error", function(err) {
@@ -46,20 +46,20 @@ class Db {
 
       that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
         if (err) {
-          console.log(err + " while creating database!");
+          //console.log(err + " while creating database!");
           reject();
         }
-        console.log("Crime data database created");
+        //console.log("Crime data database created");
       });
 
       that.con.changeUser({
         database: dbName
       }, function(err) {
         if (err) {
-          console.log(err + " while changing database!");
+          //console.log(err + " while changing database!");
           reject();
         }
-        console.log("Swapping to crime_data database");
+        //console.log("Swapping to crime_data database");
         resolve();
       });
     });
@@ -70,10 +70,10 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, month INT, day INT, hour INT, minute INT, hundred_block VARCHAR(255), neighbourhood VARCHAR(255), x FLOAT, y FLOAT, id INT AUTO_INCREMENT PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", function(err, result) {
         if (err) {
-          console.log(err + " while loading table!");
+          //console.log(err + " while loading table!");
           reject();
         }
-        console.log("Crime data table created");
+        //console.log("Crime data table created");
         resolve();
       });
     });
@@ -82,15 +82,15 @@ class Db {
   loadTable() {
     var that = this;
     return new Promise(function(resolve, reject) {
-      console.log("Loading Crime data into table...");
+      //console.log("Loading Crime data into table...");
       console.time("dataLoad");
       that.con.query("LOAD DATA LOCAL INFILE '" + fileName + "' INTO TABLE crime_data FIELDS TERMINATED BY ',' ENCLOSED BY '\"'", function(err, result) {
         if (err) {
-          console.log(err + " while loading crime data into table!");
+          //console.log(err + " while loading crime data into table!");
           console.timeEnd("dataLoad");
           reject();
         } else {
-          console.log("Crime data loaded into table");
+          //console.log("Crime data loaded into table");
           console.timeEnd("dataLoad");
           resolve();
         }
@@ -103,10 +103,10 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("DELETE FROM " + tableName, function(err, result) {
         if (err) {
-          console.log(err + " while loading table!");
+          //console.log(err + " while loading table!");
           reject();
         }
-        console.log("Cleared Crime data table");
+        //console.log("Cleared Crime data table");
         resolve();
       });
     });
@@ -115,10 +115,10 @@ class Db {
   printTopFive() {
     this.con.query("SELECT * FROM " + tableName + " LIMIT 5", function(err, result) {
       if (err) {
-        console.log(err + " while loading table!");
+        //console.log(err + " while loading table!");
       }
-      console.log("Printing first 5 rows of table...\n");
-      console.log(result);
+      //console.log("Printing first 5 rows of table...\n");
+      //console.log(result);
     });
   }
 
@@ -127,7 +127,7 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("SELECT created_at FROM " + tableName + " LIMIT 1", function(err, result) {
         if (err) {
-          console.log(err + " getting data from table!");
+          //console.log(err + " getting data from table!");
           reject();
         }
         resolve(result[0]);
@@ -139,7 +139,7 @@ class Db {
     var that = this;
     var mins = latlongToUTM(xmin, ymin);
     var maxs = latlongToUTM(xmax, ymax);
-    console.log("querying between " + mins[0] + " " + maxs[0] + " and " + mins[1] + " " + maxs[1]);
+    //console.log("querying between " + mins[0] + " " + maxs[0] + " and " + mins[1] + " " + maxs[1]);
     var params = [mins[0], maxs[0], mins[1], maxs[1], year];
 
     var queryString = "SELECT type, year, x, y FROM " + tableName + " WHERE x >= ? AND x <= ? AND y >= ? AND y <= ?";
@@ -149,7 +149,7 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query(queryString, params, function(err, result) {
         if (err) {
-          console.log(err + " getting data from table!");
+          //console.log(err + " getting data from table!");
           reject();
         }
         resolve(result);

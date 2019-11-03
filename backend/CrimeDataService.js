@@ -25,17 +25,17 @@ class CrimeDataService {
       })
       .then(function(result) {
         if (!result) {
-          console.log("Table empty, loading crime data...");
+          //console.log("Table empty, loading crime data...");
           return that.updateCrimeDataSet();
         } else {
           var date = new Date(result.created_at);
-          console.log("Database last updated was " + date);
+          //console.log("Database last updated was " + date);
 
           if (new Date() - EPOCH_WEEK > date) {
-            console.log("Database last updated was more than a week ago, loading crime data...");
+            //console.log("Database last updated was more than a week ago, loading crime data...");
             return that.updateCrimeDataSet();
           } else {
-            console.log("Table up to date!");
+            //console.log("Table up to date!");
             return new Promise(function(resolve, reject) {
               resolve();
             });
@@ -79,13 +79,13 @@ class CrimeDataService {
       });
 
       request.on("response", (response) => {
-        console.log("Request to City of Vancouver API Successful with code " + response.statusCode);
-        console.log("Printing response contents to zip...");
+        //console.log("Request to City of Vancouver API Successful with code " + response.statusCode);
+        //console.log("Printing response contents to zip...");
         response.pipe(output);
-        console.log("Response has been saved to file!");
+        //console.log("Response has been saved to file!");
         resolve();
       }).on("err", (error) => {
-        console.log(error + "Request to City of Vancouver API Failed");
+        //console.log(error + "Request to City of Vancouver API Failed");
         reject();
       });
     });
@@ -93,10 +93,10 @@ class CrimeDataService {
 
   unzipFile() {
     return new Promise(function(resolve, reject) {
-      console.log("Extracting crime data from zipped file...");
+      //console.log("Extracting crime data from zipped file...");
       var file = new Zip(zipFile);
       file.extractEntryTo(fileName, "./", false, true);
-      console.log("Crime Data has been extracted!");
+      //console.log("Crime Data has been extracted!");
       resolve();
     });
   }
