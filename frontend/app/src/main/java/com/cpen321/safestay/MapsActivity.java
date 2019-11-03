@@ -206,7 +206,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                         if (!markerList.contains(coords)) {
 
-                                            int safety_index = current.getInt("safety_index");
+                                            int safety_index = current.getInt("safetyIndex");
                                             float markerColour;
 
                                             if (safety_index > 6)
@@ -217,7 +217,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                             mMap.addMarker(new MarkerOptions().position(coords)
                                                     .title(current.getString("name")
-                                                            + "\nMax Occupancy: " + current.getInt("person_capacity")
+                                                            + "\nMax Occupancy: " + current.getInt("personCapacity")
                                                             + "\nRating: " + current.getDouble("star_rating") + " Stars")
                                                     .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
 
