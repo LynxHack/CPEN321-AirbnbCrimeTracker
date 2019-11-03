@@ -404,7 +404,7 @@ function latLonToUTMXY(lat, lon, zone, xy) {
   xy[1] = xy[1] * UTMScaleFactor;
   if (xy[1] < 0.0) {
     // xy[1] = xy[1] + 10000000;
-    xy[1] = xy[1] + Math.pow(10, 8)
+    xy[1] = xy[1] + Math.pow(10, 8);
   }
 
   return zone;

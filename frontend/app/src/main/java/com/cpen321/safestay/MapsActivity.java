@@ -57,7 +57,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private List<AutocompletePrediction> predictionList;
 
     // private Location mLastKnownLocation;
-    private LocationCallback locationCallback;
+    // private LocationCallback locationCallback;
 
     private MaterialSearchBar materialSearchBar;
 
@@ -169,11 +169,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
             
             if (!markerList.contains(coords)) {
-                int safety_index = current.getInt("safety_index");
+                int safetyIndex = current.getInt("safetyIndex");
                 float markerColour;
-                if (safety_index > 6)
+                if (safetyIndex > 6)
                     markerColour = BitmapDescriptorFactory.HUE_GREEN;
-                else if (safety_index > 4)
+                else if (safetyIndex > 4)
                     markerColour = BitmapDescriptorFactory.HUE_YELLOW;
                 else markerColour = BitmapDescriptorFactory.HUE_RED;
 

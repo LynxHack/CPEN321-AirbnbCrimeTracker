@@ -41,7 +41,7 @@ router.get("/getListing", (req, res) => {
 
       // Size of radius to check for crimes
       for(let listing of pruned){
-        listing.safety_index = crimeDataService.getCrimeRate[coord[0], coord[1]];
+        listing.safetyIndex = crimeDataService.getCrimeRate[coord[0], coord[1]];
       }
       res.status(200).send(JSON.stringify({"Listings" : pruned}));
     });
