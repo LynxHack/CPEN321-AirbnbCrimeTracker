@@ -164,20 +164,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void drawMarkers(JSONArray listings, int numListings){
-        JSONArray listings = response.getJSONArray("Listings");
-        int numListings = listings.length();
-
         for (int i = 0; i < numListings; i++) {
             JSONObject current = listings.getJSONObject(i);
             LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
-
+            
             if (!markerList.contains(coords)) {
-                int safetyIndex = current.getInt("safetyIndex");
+                int safety_index = current.getInt("safety_index");
                 float markerColour;
-
-                if (safetyIndex > 6)
+                if (safety_index > 6)
                     markerColour = BitmapDescriptorFactory.HUE_GREEN;
-                else if (safetyIndex > 4)
+                else if (safety_index > 4)
                     markerColour = BitmapDescriptorFactory.HUE_YELLOW;
                 else markerColour = BitmapDescriptorFactory.HUE_RED;
 
@@ -186,9 +182,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 + "\nMax Occupancy: " + current.getInt("person_capacity")
                                 + "\nRating: " + current.getDouble("star_rating") + " Stars")
                         .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
-
                 markerList.add(coords);
             }
+
         }
     }
 
@@ -285,7 +281,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        System.out.println("RECEIVED RESPONSE" + response.toString());
+                        // System.out.println("RECEIVED RESPONSE" + response.toString());
 //
                         try {
                             JSONObject coordinates = response.getJSONArray("results").getJSONObject(0).getJSONObject("geometry").getJSONObject("location");
