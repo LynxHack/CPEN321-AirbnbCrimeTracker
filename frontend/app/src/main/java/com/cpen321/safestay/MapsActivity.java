@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -15,12 +16,15 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
@@ -89,7 +93,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        mapView = mapFragment.getView();
         // For user's current location
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         userLocation();
@@ -171,6 +175,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         materialSearchBar.setSuggestionsClickListener(new SuggestionsAdapter.OnItemViewClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.P)
             @Override
             public void OnItemClickListener(int position, final View v) {
                 if (position >= predictionList.size()){
@@ -179,7 +184,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 AutocompletePrediction selectPrediction = predictionList.get(position);
                 String suggestion = materialSearchBar.getLastSuggestions().get(position).toString();
                 materialSearchBar.setText(suggestion);
-                materialSearchBar.clearSuggestions();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        materialSearchBar.clearSuggestions();
+                        }
+                    },1000);
+                        materialSearchBar.clearSuggestions();
                 InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 if(inputMethodManager != null)
                     inputMethodManager.hideSoftInputFromWindow(materialSearchBar.getWindowToken(),InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -333,6 +344,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
 
                 VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
+            }
+        });
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        if (mapView != null && mapView.findViewById(Integer.parseInt("1")) != null){
+            View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP,0);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
+            layoutParams.setMargins(0,0,40,180);
+        }
+        mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
+            @Override
+            public boolean onMyLocationButtonClick() {
+                if(materialSearchBar.isSuggestionsVisible())
+                    materialSearchBar.clearSuggestions();
+                if(materialSearchBar.isSearchEnabled())
+                    materialSearchBar.disableSearch();
+                return false;
             }
         });
     }
