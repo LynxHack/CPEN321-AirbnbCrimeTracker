@@ -114,8 +114,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         materialSearchBar.addTextChangeListener(new TextWatcher() {
-            // Most likely will be unused, but currently kept if necessity to use it pops up
             @Override
+            // Most likely will be unused, but currently kept if necessity to use it pops up
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
             }
