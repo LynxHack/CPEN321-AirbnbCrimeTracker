@@ -56,39 +56,7 @@ router.get("/getListing", (req, res) => {
         for(let listing of pruned){
           let convcoord = latlongToUTM(listing.lng, listing.lat);
           let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
-          if(crimecount < 50){
-            listing.safety_index = 10;
-          }
-          else if(crimecount < 100){
-            listing.safety_index = 9;
-          }
-          else if(crimecount < 200){
-            listing.safety_index = 8;
-          }
-          else if(crimecount < 300){
-            listing.safety_index = 7;
-          }
-          else if(crimecount < 600){
-            listing.safety_index = 6;
-          }
-          else if(crimecount < 900){
-            listing.safety_index = 5;
-          }
-          else if(crimecount < 1200){
-            listing.safety_index = 4;
-          }
-          else if(crimecount < 1500){
-            listing.safety_index = 3;
-          }
-          else if(crimecount < 1800){
-            listing.safety_index = 2;
-          }
-          else if(crimecount < 2000){
-            listing.safety_index = 1;
-          }
-          else{
-            listing.safety_index = 0;
-          }
+          listing.safety_index = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
         }
         res.status(200).send(JSON.stringify({"Listings" : pruned}));
       });

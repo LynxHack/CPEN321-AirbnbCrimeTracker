@@ -1,12 +1,12 @@
 ## Docker Build Image
 
-```
+```shell
 docker build -t express-server:dockerfile .
 ```
 
 ## Docker Run Image By Itself
 
-```
+```shell
 docker run -p 3000:3000 -d express-server:dockerfile
 ```
 
