@@ -458,7 +458,8 @@ function latLonToUTMXY(lat, lon, zone, xy) {
  * Called when the btnToUTM button is clicked.
  *
  */
-function btnToUTM_OnClick(lon, lat) {
+// function btnToUTM_OnClick(lon, lat) {
+function btnToUTMOnClick(lon, lat){
   var xy = new Array(2);
 
   // if(typeof lon != "integer") {
@@ -479,4 +480,4 @@ function btnToUTM_OnClick(lon, lat) {
 
   return xy;
 }
-module.exports = btnToUTM_OnClick;
+module.exports = btnToUTMOnClick;

@@ -4,7 +4,6 @@ const express = require("express");
 const router = new express.Router();
 const bodyParser = require("body-parser");
 const crimeDataService = require("./CrimeDataService");
-// const latlongToUTM = require("./latlongToUTM");
 
 // Middleware
 router.use(bodyParser.urlencoded({extended: true}));

@@ -3,6 +3,7 @@ const fs = require("fs");
 const Zip = require("adm-zip");
 const db = require("./dbs");
 const util = require("./util");
+const latlongToUTM = require("./latlongToUTM");
 
 const EPOCH_SEC = 1000;
 const EPOCH_MIN = EPOCH_SEC * 60;
@@ -93,7 +94,9 @@ class CrimeDataService {
           res();
         });
       }
-      catch(err){rej(err)}
+      catch(err){
+        rej(err);
+      };
     })
   }
 
