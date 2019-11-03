@@ -52,11 +52,11 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private LocationManager locationManager;
+    // private LocationManager locationManager;
     private PlacesClient placesClient;
     private List<AutocompletePrediction> predictionList;
 
-    private Location mLastKnownLocation;
+    // private Location mLastKnownLocation;
     private LocationCallback locationCallback;
 
     private MaterialSearchBar materialSearchBar;
@@ -103,13 +103,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onButtonClicked(int buttonCode) {
-                if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
-                    // To open menu for relevant filters
-                }
+                // if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
+                //     // To open menu for relevant filters
+                // }
 
-                else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
+                // else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
+                //     materialSearchBar.disableSearch();
+                // }
+                if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
                     materialSearchBar.disableSearch();
                 }
+
             }
         });
 
@@ -159,6 +163,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    public void drawMarkers(JSONArray listings, int numListings){
+        JSONArray listings = response.getJSONArray("Listings");
+        int numListings = listings.length();
+
+        for (int i = 0; i < numListings; i++) {
+            JSONObject current = listings.getJSONObject(i);
+            LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
+
+            if (!markerList.contains(coords)) {
+                int safetyIndex = current.getInt("safetyIndex");
+                float markerColour;
+
+                if (safetyIndex > 6)
+                    markerColour = BitmapDescriptorFactory.HUE_GREEN;
+                else if (safetyIndex > 4)
+                    markerColour = BitmapDescriptorFactory.HUE_YELLOW;
+                else markerColour = BitmapDescriptorFactory.HUE_RED;
+
+                mMap.addMarker(new MarkerOptions().position(coords)
+                        .title(current.getString("name")
+                                + "\nMax Occupancy: " + current.getInt("person_capacity")
+                                + "\nRating: " + current.getDouble("star_rating") + " Stars")
+                        .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+
+                markerList.add(coords);
+            }
+        }
+    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -172,18 +204,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
-
                 VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 farLeft = visibleRegion.farLeft;
                 nearRight = visibleRegion.nearRight;
-
-                // Saved if request is ever switched back to POST
-                /*Map<String, String> params = new HashMap<>();
-
-                params.put("xmin", Double.toString(farLeft.longitude));
-                params.put("xmax", Double.toString(nearRight.longitude));
-                params.put("ymin", Double.toString(nearRight.latitude));
-                params.put("ymax", Double.toString(farLeft.latitude));*/
 
                 String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
                 System.out.println(url);
@@ -194,42 +217,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 System.out.println("RECEIVED RESPONSE" + response.toString());
 
                                 try {
-                                    JSONArray listings = response.getJSONArray("Listings");
-
-                                    int numListings = listings.length();
-
-                                    for (int i = 0; i < numListings; i++) {
-
-                                        JSONObject current = listings.getJSONObject(i);
-
-                                        LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
-
-                                        if (!markerList.contains(coords)) {
-
-                                            int safety_index = current.getInt("safety_index");
-                                            float markerColour;
-
-                                            if (safety_index > 6)
-                                                markerColour = BitmapDescriptorFactory.HUE_GREEN;
-                                            else if (safety_index > 4)
-                                                markerColour = BitmapDescriptorFactory.HUE_YELLOW;
-                                            else markerColour = BitmapDescriptorFactory.HUE_RED;
-
-                                            mMap.addMarker(new MarkerOptions().position(coords)
-                                                    .title(current.getString("name")
-                                                            + "\nMax Occupancy: " + current.getInt("person_capacity")
-                                                            + "\nRating: " + current.getDouble("star_rating") + " Stars")
-                                                    .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
-
-                                            markerList.add(coords);
-                                        }
-
-                                    }
-
+                                    drawMarkers(listings, numlistings);
                                 } catch (JSONException e) {
-                                    //problem with receiving JSONObject
-                                    //OR
-                                    //problem with extracting info from JSONObject
                                     Toast.makeText(getApplicationContext(), "JSON Exception in login activity!!", Toast.LENGTH_SHORT).show();
                                     e.printStackTrace();
                                 }
@@ -245,13 +234,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 String body;
                                 //get response body and parse with appropriate encoding
-                                try {
-                                    body = new String(error.networkResponse.data, "UTF-8");
-                                    Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
+                                // try {
+                                body = new String(error.networkResponse.data, "UTF-8");
+                                Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
 
-                                } catch (UnsupportedEncodingException e) {
-                                    //exception handling to be placed here
-                                }
+                                // } catch (UnsupportedEncodingException e) {
+                                //     //exception handling to be placed here
+                                // }
                             }
                         });
 
@@ -278,8 +267,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void userLocation() {
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)

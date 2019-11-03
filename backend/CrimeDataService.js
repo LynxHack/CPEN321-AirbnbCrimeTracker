@@ -14,7 +14,7 @@ const EPOCH_WEEK = EPOCH_DAY * 7;
 const COVurl = "geodash.vpd.ca";
 const path = "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41";
 const fileName = "crimedata_csv_all_years.csv";
-const zipFile = "crimedata.zip";
+// const zipFile = "crimedata.zip";
 var cache = null;
 
 
@@ -110,7 +110,7 @@ class CrimeDataService {
   updateCrimeDataSet() {
     var that = this;
     return new Promise(function(resolve, reject) {
-      const output = fs.createWriteStream(zipFile);
+      const output = fs.createWriteStream("crimedata.zip");
       output.on("finish", () => {
         that.unzipFile().then((result) => {
           db.loadTable();
@@ -151,7 +151,7 @@ class CrimeDataService {
   unzipFile() {
     return new Promise(function(resolve, reject) {
       //console.log("Extracting crime data from zipped file...");
-      var file = new Zip(zipFile);
+      var file = new Zip("crimedata.zip");
       file.extractEntryTo(fileName, "./", false, true);
       //console.log("Crime Data has been extracted!");
       resolve();
