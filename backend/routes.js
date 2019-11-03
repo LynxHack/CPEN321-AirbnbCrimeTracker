@@ -1,50 +1,31 @@
 require("dotenv").config();
-var util = require("util");
-var express = require("express");
-var router = express.Router();
+const util = require("./util");
+const express = require("express");
+const router = new express.Router();
 const bodyParser = require("body-parser");
-var crimeDataService = require("./CrimeDataService");
+const crimeDataService = require("./CrimeDataService");
 const latlongToUTM = require("./latlongToUTM");
 // Middleware
 router.use(bodyParser.urlencoded({extended: true}));
 router.use(require("method-override")("_method"));
 
 //API Calls
-var pythonport = "5000";
-var axios = require("axios");
+const pythonport = "5000";
+const axios = require("axios");
 
 // Define the home page route
 router.get("/", (req, res) => {
+<<<<<<< HEAD
   //console.log("Received home request");
+=======
+>>>>>>> 1944a2904061d8a5347c33df2d950e6973712927
   res.send("home page");
 });
 
-// Clean up circular jsons
-const getCircularReplacer = () => {
-  const seen = new WeakSet();
-  return (key, value) => {
-    if (typeof value === "object" && value !== null) {
-      if (seen.has(value)) {
-        return null;
-      }
-      seen.add(value);
-    }
-    return value;
-  };
-};
-var getdist = function(x1,y1,x2,y2) {
-  return (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
-};
-
-
-var filterCrimes = function(val, convcoord) {
-  var radiuspreset = 10000;
-  return getdist(convcoord[0], convcoord[1], val.x, val.y) < radiuspreset;
-};
-
 // Look under listings for airbnb posts
-const reverse = require("reverse-geocode");
+// const reverse = require("reverse-geocode"); // For future cities
 router.get("/getListing", (req, res) => {
+<<<<<<< HEAD
   // res.setHeader("Content-Type", "application/json");
   //console.log("Received request" , req.query);
   var xrange = [Number(req.query["xmin"]), Number(req.query["xmax"])];
@@ -54,11 +35,17 @@ router.get("/getListing", (req, res) => {
   // mainquery = reverse.lookup(coord[0], coord[1], "ca").city;
   var mainquery = "vancouver";
   //console.log(mainquery);
+=======
+  // var xrange = [Number(req.query["xmin"]), Number(req.query["xmax"])];
+  // var yrange = [Number(req.query["ymin"]), Number(req.query["ymax"])];
+  // var coord = [(xrange[0] + xrange[1])/2,(yrange[0] + yrange[1])/2];
+  var mainquery = "vancouver";
+>>>>>>> 1944a2904061d8a5347c33df2d950e6973712927
   try {
-      var arr = [];
       axios.get(`http://localhost:${pythonport}/${mainquery}`).then((result) => {
       var len = result.data.explore_tabs[0].sections.length;
       var pruned = result.data.explore_tabs[0].sections[len - 1];
+<<<<<<< HEAD
       pruned = JSON.parse(JSON.stringify(pruned, getCircularReplacer()));
       pruned.listings.map((x) => {return x.listing;});
       // //console.log(pruned);
@@ -89,9 +76,30 @@ router.get("/getListing", (req, res) => {
       //       && x.lng <= yrange[1];
       // })
 
+=======
+      pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {return x.listing;});
+      pruned = pruned.map((listing) => {
+                    return (({id, 
+                              lat, 
+                              lng, 
+                              name, 
+                              star_rating, 
+                              reviews_count, 
+                              person_capacity, 
+                              picture}) => 
+                              ({id, 
+                                lat, 
+                                lng, 
+                                name, 
+                                star_rating, 
+                                reviews_count, 
+                                person_capacity, 
+                                picture}))(listing);
+                    });
+>>>>>>> 1944a2904061d8a5347c33df2d950e6973712927
       // Size of radius to check for crimes
-
       crimeDataService.getCrimeData(-123.3, -123, 49, 49.5).then((crimes) => {
+<<<<<<< HEAD
         // //console.log(crimes);
         if(!crimes.length){
           return;
@@ -137,12 +145,26 @@ router.get("/getListing", (req, res) => {
         }
         // //console.log(arr);
         res.status(200).send(JSON.stringify({"Listings" : arr}));
+=======
+        if(!crimes.length){
+          return;
+        }
+        for(let listing of pruned){
+          let convcoord = latlongToUTM(listing.lng, listing.lat);
+          let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
+          listing.safety_index = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
+        }
+        res.status(200).send(JSON.stringify({"Listings" : pruned}));
+>>>>>>> 1944a2904061d8a5347c33df2d950e6973712927
       });
 
     });
   }
   catch(err){
+<<<<<<< HEAD
     //console.log(err);
+=======
+>>>>>>> 1944a2904061d8a5347c33df2d950e6973712927
     res.status(500).send("Failed to load from Airbnb Microservice");
   }
 });

@@ -1,9 +1,12 @@
 package com.cpen321.safestay;
 
+import com.android.volley.RetryPolicy;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -13,8 +16,11 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -24,13 +30,20 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.libraries.places.api.Places;
+
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.android.libraries.places.api.model.AutocompletePrediction;
+import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
+import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.mancj.materialsearchbar.MaterialSearchBar;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -40,10 +53,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private LocationManager locationManager;
+    private PlacesClient placesClient;
+    private List<AutocompletePrediction> predictionList;
+
+    private Location mLastKnownLocation;
+    private LocationCallback locationCallback;
+
+    private MaterialSearchBar materialSearchBar;
+
     private LatLng currentLocation;
-    private final String crimesURL = "10.0.75.2:3000/crimes";
-    private final String airbnbURL = "http://192.168.1.69/getlistings";
-    private final String testURL = "/";
+    private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
     private List<LatLng> markerList = new ArrayList<LatLng>();
@@ -62,6 +81,86 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // For user's current location
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         userLocation();
+
+        // Initialize Places.
+        Places.initialize(MapsActivity.this, googleSearchKey);
+
+        // Create a new Places client instance.
+        placesClient = Places.createClient(this);
+        final AutocompleteSessionToken token = AutocompleteSessionToken.newInstance();
+        materialSearchBar = findViewById(R.id.searchBar);
+
+        materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
+            // Might be used when implementing search filters
+            @Override
+            public void onSearchStateChanged(boolean enabled) {
+
+            }
+
+            @Override
+            public void onSearchConfirmed(CharSequence text) {
+                //startSearch(text.toString(), true, null, true);
+                searchCity(text.toString());
+            }
+
+            @Override
+            public void onButtonClicked(int buttonCode) {
+                if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
+
+                }
+
+                else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
+                    materialSearchBar.disableSearch();
+                }
+            }
+        });
+
+        materialSearchBar.addTextChangeListener(new TextWatcher() {
+            // Most likely will be unused, but currently kept if necessity to use it pops up
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
+                        .setTypeFilter(TypeFilter.CITIES).setSessionToken(token).setQuery(charSequence.toString())
+                        .build();
+                placesClient.findAutocompletePredictions(predictionsRequest).addOnCompleteListener(new OnCompleteListener<FindAutocompletePredictionsResponse>() {
+                    @Override
+                    public void onComplete(@NonNull Task<FindAutocompletePredictionsResponse> task) {
+                        if (task.isSuccessful()) {
+                            FindAutocompletePredictionsResponse predictionsResponse = task.getResult();
+
+                            if (predictionsResponse != null) {
+                                predictionList = predictionsResponse.getAutocompletePredictions();
+                                List<String> suggestionsList = new ArrayList<>();
+                                for (AutocompletePrediction prediction : predictionList) {
+                                    suggestionsList.add(prediction.getFullText(null).toString());
+                                }
+                                materialSearchBar.updateLastSuggestions(suggestionsList);
+
+                                if (!materialSearchBar.isSuggestionsVisible()) {
+                                    materialSearchBar.showSuggestionsList();
+                                }
+                            }
+                        }
+
+                        else {
+                            // Log error
+                            System.out.println("FAILURE");
+                        }
+                    }
+                });
+            }
+
+            // Most likely will be unused, but currently kept if necessity to use it pops up
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
     }
 
 
@@ -72,7 +171,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // If user gives permission for current location, zoom in on their coordinates
         if (currentLocation != null) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 13.0f));
-            //searchCity();
         }
 
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
@@ -83,6 +181,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 farLeft = visibleRegion.farLeft;
                 nearRight = visibleRegion.nearRight;
 
+                // Saved if request is ever switched back to POST
                 /*Map<String, String> params = new HashMap<>();
 
                 params.put("xmin", Double.toString(farLeft.longitude));
@@ -90,7 +189,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 params.put("ymin", Double.toString(nearRight.latitude));
                 params.put("ymax", Double.toString(farLeft.latitude));*/
 
-                String url = "http://34.221.117.161:3000/getListing/".concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
+                String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
                 System.out.println(url);
                 CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, url, null,
                         new Response.Listener<JSONObject>() {
@@ -160,6 +259,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             }
                         });
 
+                jsObjRequest.setRetryPolicy(new RetryPolicy() {
+                    @Override
+                    public int getCurrentTimeout() {
+                        return 100000;
+                    }
+
+                    @Override
+                    public int getCurrentRetryCount() {
+                        return 100000;
+                    }
+
+                    // Might implement a retry logic if connection fails within timeout range
+                    @Override
+                    public void retry(VolleyError error) throws VolleyError {
+
+                    }
+                });
+
                 VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
             }
         });
@@ -177,10 +294,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void searchCity() {
-
-        String city = "burnaby";
-
+    private void searchCity(String city) {
         // Replace spaces with space ASCII code
         String searchURL = googleURL + city.replace(" ", "%20") + googleSearchKey;
 
@@ -199,7 +313,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             //problem with receiving JSONObject
                             //OR
                             //problem with extracting info from JSONObject
-                            Toast.makeText(getApplicationContext(), "JSON Exception in login activity!!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                     }
@@ -207,7 +321,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Some kind of error", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
                         if (error == null || error.networkResponse == null) {
                             return;
                         }

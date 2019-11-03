@@ -403,7 +403,7 @@ function latLonToUTMXY(lat, lon, zone, xy) {
   xy[0] = xy[0] * UTMScaleFactor + 500000.0;
   xy[1] = xy[1] * UTMScaleFactor;
   if (xy[1] < 0.0) {
-    xy[1] = xy[1] + 10000000.0;
+    xy[1] = xy[1] + 10000000;
   }
 
   return zone;
@@ -439,7 +439,7 @@ function utmXYToLatLon(x, y, zone, southhemi, latlon) {
   x /= UTMScaleFactor;
 
   /* If in southern hemisphere, adjust y accordingly. */
-  y -= 10000000.0;
+  y -= 10000000;
 
   y /= UTMScaleFactor;
 

@@ -19,4 +19,4 @@ def search(location):
 
 ## Init
 if __name__ == '__main__':
-    app.run(port=port, debug=True, host='0.0.0.0')
+    app.run(port=port, host='localhost')
