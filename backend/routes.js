@@ -35,8 +35,8 @@ router.get("/getListing", (req, res) => {
       var pruned = result.data.explore_tabs[0].sections.pop();
       pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {return x.listing;});
       pruned = pruned.map((listing) => {
-                    return (({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture}) => 
-                              ({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture}))(listing);
+                    return (({id, lat, lng, name, star_rating, reviews_count, personCapacity, picture}) => 
+                              ({id, lat, lng, name, star_rating, reviews_count, personCapacity, picture}))(listing);
                     });
 
       // Size of radius to check for crimes
