@@ -18,9 +18,12 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,6 +35,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 
@@ -40,14 +45,19 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
+import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.api.net.FetchPlaceRequest;
+import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.mancj.materialsearchbar.MaterialSearchBar;
+import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -66,7 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LatLng currentLocation;
     private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
-    private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
+    private final String googleSearchKey = "&key=AIzaSyAfhRQ-YOf4K1w32qXkpCoChX1UInALXEQ";
     private List<LatLng> markerList = new ArrayList<LatLng>();
     private LatLng farLeft;
     private LatLng nearRight;
@@ -85,7 +95,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         userLocation();
 
         // Initialize Places.
-        Places.initialize(MapsActivity.this, googleSearchKey);
+        Places.initialize(getApplicationContext(), "AIzaSyAfhRQ-YOf4K1w32qXkpCoChX1UInALXEQ");
 
         // Create a new Places client instance.
         placesClient = Places.createClient(this);
@@ -127,6 +137,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
                         .setTypeFilter(TypeFilter.CITIES).setSessionToken(token).setQuery(charSequence.toString())
                         .build();
+                PlacesClient placesClient = Places.createClient(MapsActivity.this);
+
                 placesClient.findAutocompletePredictions(predictionsRequest).addOnCompleteListener(new OnCompleteListener<FindAutocompletePredictionsResponse>() {
                     @Override
                     public void onComplete(@NonNull Task<FindAutocompletePredictionsResponse> task) {
@@ -145,9 +157,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     materialSearchBar.showSuggestionsList();
                                 }
                             }
-                        }
-
-                        else {
+                        } else {
                             // Log error
                             System.out.println("FAILURE");
                         }
@@ -157,6 +167,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void afterTextChanged(Editable editable) {
+
+            }
+        });
+        materialSearchBar.setSuggestionsClickListener(new SuggestionsAdapter.OnItemViewClickListener() {
+            @Override
+            public void OnItemClickListener(int position, final View v) {
+                if (position >= predictionList.size()){
+                    return;
+                }
+                AutocompletePrediction selectPrediction = predictionList.get(position);
+                String suggestion = materialSearchBar.getLastSuggestions().get(position).toString();
+                materialSearchBar.setText(suggestion);
+                materialSearchBar.clearSuggestions();
+                InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if(inputMethodManager != null)
+                    inputMethodManager.hideSoftInputFromWindow(materialSearchBar.getWindowToken(),InputMethodManager.HIDE_IMPLICIT_ONLY);
+                String PlaceId = selectPrediction.getPlaceId();
+                List<Place.Field> placeField = Arrays.asList(Place.Field.LAT_LNG);
+
+                FetchPlaceRequest fetchPlaceRequest = FetchPlaceRequest.builder(PlaceId,placeField).build();
+                placesClient.fetchPlace((fetchPlaceRequest)).addOnSuccessListener(new OnSuccessListener<FetchPlaceResponse>() {
+                    @Override
+                    public void onSuccess(FetchPlaceResponse fetchPlaceResponse) {
+                        Place place = fetchPlaceResponse.getPlace();
+                        Log.i("mytage","place found" + place.getName());
+                        LatLng latLngOfPlace = place.getLatLng();
+                        if(latLngOfPlace != null ){
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngOfPlace, 14));
+
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        if (e instanceof ApiException){
+                            ApiException apiException = (ApiException) e ;
+                            apiException.printStackTrace();
+                            int statuscode =apiException.getStatusCode();
+                            Log.i("mytag","place not found: " + e.getMessage());
+                            Log.i("mytag","status code:" + statuscode);
+                        }
+
+                    }
+                });
+            }
+
+            @Override
+            public void OnItemDeleteListener(int position, View v) {
 
             }
         });
