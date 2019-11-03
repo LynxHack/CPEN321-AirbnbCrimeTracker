@@ -30,7 +30,7 @@ router.get("/getListing", (req, res) => {
   var xrange = [Number(req.query["xmin"]), Number(req.query["xmax"])];
   var yrange = [Number(req.query["ymin"]), Number(req.query["ymax"])];
   var coord = [(yrange[0] + yrange[1])/2,(xrange[0] + xrange[1])/2];
-  var mainquery = reverse.lookup(coord[0], coord[1], 'ca').city.split(' ')[0];
+  var mainquery = reverse.lookup(coord[0], coord[1], "ca").city.split(" ")[0];
   try {
       axios.get(`http://localhost:${pythonport}/${mainquery}`).then((result) => {
       var pruned = result.data.explore_tabs[0].sections.pop();

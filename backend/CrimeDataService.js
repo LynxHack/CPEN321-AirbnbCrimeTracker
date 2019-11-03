@@ -64,7 +64,7 @@ class CrimeDataService {
       return [0,0];
     }
 
-    return [Math.floor((lat - vanBound[0]) / latincr), Math.floor((lng - vanBound[2]) / lngincr)]
+    return [Math.floor((lat - vanBound[0]) / latincr), Math.floor((lng - vanBound[2]) / lngincr)];
   }
 
   // Fast O(1) lookup for crime safety index

@@ -83,15 +83,15 @@ class Db {
     var that = this;
     return new Promise(function(resolve, reject) {
       //console.log("Loading Crime data into table...");
-      console.time("dataLoad");
+      // console.time("dataLoad");
       that.con.query("LOAD DATA LOCAL INFILE '" + fileName + "' INTO TABLE crime_data FIELDS TERMINATED BY ',' ENCLOSED BY '\"'", function(err, result) {
         if (err) {
           //console.log(err + " while loading crime data into table!");
-          console.timeEnd("dataLoad");
+          // console.timeEnd("dataLoad");
           reject();
         } else {
           //console.log("Crime data loaded into table");
-          console.timeEnd("dataLoad");
+          // console.timeEnd("dataLoad");
           resolve();
         }
       });
@@ -163,10 +163,10 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query(queryString,  function(err, result) {
         if (err) {
-          console.log(err + " getting data from table!");
+          // console.log(err + " getting data from table!");
           reject();
         }
-        console.log("got results crime " + result)
+        // console.log("got results crime " + result)
         resolve(result);
       });
     });
