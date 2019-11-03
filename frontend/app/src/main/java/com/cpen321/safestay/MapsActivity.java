@@ -18,7 +18,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationCallback;
@@ -61,7 +60,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationCallback locationCallback;
 
     private MaterialSearchBar materialSearchBar;
-    private View mapView;
 
     private LatLng currentLocation;
     private final String listingURL = "http://52.12.72.93:3000/getListing/";
@@ -93,6 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         materialSearchBar = findViewById(R.id.searchBar);
 
         materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
+            // Might be used when implementing search filters
             @Override
             public void onSearchStateChanged(boolean enabled) {
 
@@ -117,6 +116,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         materialSearchBar.addTextChangeListener(new TextWatcher() {
+            // Most likely will be unused, but currently kept if necessity to use it pops up
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -155,6 +155,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
             }
 
+            // Most likely will be unused, but currently kept if necessity to use it pops up
             @Override
             public void afterTextChanged(Editable editable) {
 
@@ -180,6 +181,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 farLeft = visibleRegion.farLeft;
                 nearRight = visibleRegion.nearRight;
 
+                // Saved if request is ever switched back to POST
                 /*Map<String, String> params = new HashMap<>();
 
                 params.put("xmin", Double.toString(farLeft.longitude));
@@ -268,6 +270,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         return 100000;
                     }
 
+                    // Might implement a retry logic if connection fails within timeout range
                     @Override
                     public void retry(VolleyError error) throws VolleyError {
 
