@@ -7,7 +7,7 @@ const crimeDataService = require("./CrimeDataService");
 const PORT = 3000;
 
 var d = new Date();
-console.log("Starting server at " + d.toLocaleString());
+//console.log("Starting server at " + d.toLocaleString());
 
 crimeDataService.initializeCrimeDataSet();
 
@@ -15,5 +15,5 @@ crimeDataService.initializeCrimeDataSet();
 app.use(require("./routes"));
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  //console.log(`Server listening on port ${PORT}`);
 });

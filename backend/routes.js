@@ -4,7 +4,7 @@ const express = require("express");
 const router = new express.Router();
 const bodyParser = require("body-parser");
 const crimeDataService = require("./CrimeDataService");
-const latlongToUTM = require("./latlongToUTM");
+// const latlongToUTM = require("./latlongToUTM");
 
 // Middleware
 router.use(bodyParser.urlencoded({extended: true}));
@@ -19,6 +19,7 @@ const reverse = require("reverse-geocode"); // For future cities
 
 // Define the home page route
 router.get("/", (req, res) => {
+  //console.log("Received home request");
   res.send("home page");
 });
 
@@ -40,21 +41,10 @@ router.get("/getListing", (req, res) => {
                     });
 
       // Size of radius to check for crimes
-      for(let listing of pruned){        //   }
+      for(let listing of pruned){
         listing.safety_index = crimeDataService.getCrimeRate[coord[0], coord[1]];
       }
-      // crimeDataService.getCrimeData(-123.3, -123, 49, 49.5).then((crimes) => {
-      //   console.log(crimes);
-      //   if(!crimes.length){
-      //     res.status(200).send(JSON.stringify({"Listings" : pruned}));
-      //   }
-      //   for(let listing of pruned){
-      //     let convcoord = latlongToUTM(listing.lng, listing.lat);
-      //     let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
-      //     listing.safety_index = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
-      //   }
       res.status(200).send(JSON.stringify({"Listings" : pruned}));
-      // });
     });
   }
   catch(err){

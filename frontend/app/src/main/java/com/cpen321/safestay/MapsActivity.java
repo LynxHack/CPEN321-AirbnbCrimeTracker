@@ -91,22 +91,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         materialSearchBar = findViewById(R.id.searchBar);
 
         materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
-            // Might be used when implementing search filters
             @Override
             public void onSearchStateChanged(boolean enabled) {
-
+                // Might be used when implementing search filters
             }
 
             @Override
             public void onSearchConfirmed(CharSequence text) {
-                //startSearch(text.toString(), true, null, true);
                 searchCity(text.toString());
             }
 
             @Override
             public void onButtonClicked(int buttonCode) {
                 if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
-
+                    // To open menu for relevant filters
                 }
 
                 else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
@@ -116,10 +114,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         materialSearchBar.addTextChangeListener(new TextWatcher() {
-            // Most likely will be unused, but currently kept if necessity to use it pops up
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+                // Most likely will be unused, but currently kept if necessity to use it pops up
             }
 
             @Override
@@ -155,10 +152,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
             }
 
-            // Most likely will be unused, but currently kept if necessity to use it pops up
             @Override
             public void afterTextChanged(Editable editable) {
-
+                // Most likely will be unused, but currently kept if necessity to use it pops up
             }
         });
     }
@@ -270,10 +266,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         return 100000;
                     }
 
-                    // Might implement a retry logic if connection fails within timeout range
                     @Override
                     public void retry(VolleyError error) throws VolleyError {
-
+                        // Might implement a retry logic if connection fails within timeout range
                     }
                 });
 
