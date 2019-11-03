@@ -23,11 +23,11 @@ class CrimeDataService {
   constructor(){
     this.resolution = 100;
     this.vanBound = [-123.27, -123.02, 49.195, 49.315];
-    this.latincr = (vanBound[1] - vanBound[0]) / resolution;
-    this.lngincr = (vanBound[3] - vanBound[2]) / resolution;
-    this.crimeRates = new Array(resolution);
+    this.latincr = (this.vanBound[1] - this.vanBound[0]) / this.resolution;
+    this.lngincr = (this.vanBound[3] - this.vanBound[2]) / this.resolution;
+    this.crimeRates = new Array(this.resolution);
     for(let row of this.crimeRates){
-      var tmp = new Array(resolution);
+      var tmp = new Array(this.resolution);
       tmp.fill(0); //default val
       row = tmp;
     }
@@ -68,7 +68,7 @@ class CrimeDataService {
       return [0,0];
     }
 
-    return [Math.floor((lat - this.vanBound[0]) / latincr), Math.floor((lng - this.vanBound[2]) / lngincr)];
+    return [Math.floor((lat - this.vanBound[0]) / this.latincr), Math.floor((lng - this.vanBound[2]) / this.lngincr)];
   }
 
   // Fast O(1) lookup for crime safety index
@@ -84,11 +84,11 @@ class CrimeDataService {
         db.getAllQuery().then((crimes) => {
           for(let i = 0; i < this.crimeRates.length; i++){
             for(let j = 0; j < this.crimesRates.length; j++){
-              var currlat = this.vanBound[0] + latincr * i;
-              var currlng = this.vanBound[2] + lngincr * j;
+              var currlat = this.vanBound[0] + this.latincr * i;
+              var currlng = this.vanBound[2] + this.lngincr * j;
               let convcoord = latlongToUTM(currlat, currlng);
               let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
-              crimesRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
+              this.crimesRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
             }
           }
           res();
@@ -96,8 +96,8 @@ class CrimeDataService {
       }
       catch(err){
         rej(err);
-      };
-    })
+      }
+    });
   }
 
   getCrimeData(xmin, xmax, ymin, ymax, year) {
