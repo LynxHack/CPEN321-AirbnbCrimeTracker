@@ -16,10 +16,10 @@ const fileName = "crimedata_csv_all_years.csv";
 const zipFile = "crimedata.zip";
 var cache = null;
 
+var resolution = 100;
 const vanBound = [-123.27, -123.02, 49.195, 49.315];
 const latincr = (vanBound[1] - vanBound[0]) / resolution;
 const lngincr = (vanBound[3] - vanBound[2]) / resolution;
-var resolution = 100;
 var crimeRates = new Array(resolution);
 for(let row of crimeRates){
   var tmp = new Array(resolution);
@@ -55,10 +55,15 @@ class CrimeDataService {
       });
   }
 
+  between(x, min, max) {
+    return x >= min && x <= max;
+  }
+
   getIndex(lat, lng){
-    if(lat < vanBound[0] || lat > vanBound[1] || lng < vanBound[2] || lng > vanBound[3]){
-      return [0, 0];
+    if(!this.between(i,vanBound[0], vanBound[1]) || this.between(j,vanBound[2], vanBound[3])){
+      return [0,0];
     }
+
     return [Math.floor((lat - vanBound[0]) / latincr), Math.floor((lng - vanBound[2]) / lngincr)]
   }
 
@@ -108,7 +113,7 @@ class CrimeDataService {
       });
       that.requestCrimeData(output).then(() => {
         that.updateCrimeSafety();
-      })
+      });
     });
   }
 

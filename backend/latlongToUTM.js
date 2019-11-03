@@ -4,9 +4,9 @@
 var pi = 3.14159265358979;
 
 /* Ellipsoid model constants (actual values here are for WGS84) */
-var sm_a = 6378137.0;
-var sm_b = 6356752.314;
-var sm_EccSquared = 6.69437999013e-03;
+var sma = 6378137.0;
+var smb = 6356752.314;
+// var sm_EccSquared = 6.69437999013e-03;
 
 var UTMScaleFactor = 0.9996;
 
@@ -24,15 +24,15 @@ function degToRad(deg) {
 
 
 
-/*
- * radToDeg
- *
- * Converts radians to degrees.
- *
- */
-function radToDeg(rad) {
-  return (rad / pi * 180.0);
-}
+// /*
+//  * radToDeg
+//  *
+//  * Converts radians to degrees.
+//  *
+//  */
+// function radToDeg(rad) {
+//   return (rad / pi * 180.0);
+// }
 
 
 
@@ -50,8 +50,8 @@ function radToDeg(rad) {
  *     phi - Latitude of the point, in radians.
  *
  * Globals:
- *     sm_a - Ellipsoid model major axis.
- *     sm_b - Ellipsoid model minor axis.
+ *     sma - Ellipsoid model major axis.
+ *     smb - Ellipsoid model minor axis.
  *
  * Returns:
  *     The ellipsoidal distance of the point from the equator, in meters.
@@ -62,10 +62,10 @@ function arcLengthOfMeridian(phi) {
   var result;
 
   /* Precalculate n */
-  n = (sm_a - sm_b) / (sm_a + sm_b);
+  n = (sma - smb) / (sma + smb);
 
   /* Precalculate alpha */
-  alpha = ((sm_a + sm_b) / 2.0) *
+  alpha = ((sma + smb) / 2.0) *
     (1.0 + (Math.pow(n, 2.0) / 4.0) + (Math.pow(n, 4.0) / 64.0));
 
   /* Precalculate beta */
@@ -140,11 +140,11 @@ function footPointLatitude(y) {
   var result;
 
   /* Precalculate n (Eq. 10.18) */
-  n = (sm_a - sm_b) / (sm_a + sm_b);
+  n = (sma - smb) / (sma + smb);
 
   /* Precalculate alpha_ (Eq. 10.22) */
   /* (Same as alpha in Eq. 10.17) */
-  alpha_ = ((sm_a + sm_b) / 2.0) *
+  alpha_ = ((sma + smb) / 2.0) *
     (1 + (Math.pow(n, 2.0) / 4) + (Math.pow(n, 4.0) / 64));
 
   /* Precalculate y_ (Eq. 10.23) */
@@ -205,13 +205,13 @@ function mapLatLonToXY(phi, lambda, lambda0, xy) {
   var tmp;
 
   /* Precalculate ep2 */
-  ep2 = (Math.pow(sm_a, 2.0) - Math.pow(sm_b, 2.0)) / Math.pow(sm_b, 2.0);
+  ep2 = (Math.pow(sma, 2.0) - Math.pow(smb, 2.0)) / Math.pow(smb, 2.0);
 
   /* Precalculate nu2 */
   nu2 = ep2 * Math.pow(Math.cos(phi), 2.0);
 
   /* Precalculate N */
-  N = Math.pow(sm_a, 2.0) / (sm_b * Math.sqrt(1 + nu2));
+  N = Math.pow(sma, 2.0) / (smb * Math.sqrt(1 + nu2));
 
   /* Precalculate t */
   t = Math.tan(phi);
@@ -297,8 +297,8 @@ function mapXYToLatLon(x, y, lambda0, philambda) {
   phif = footPointLatitude(y);
 
   /* Precalculate ep2 */
-  ep2 = (Math.pow(sm_a, 2.0) - Math.pow(sm_b, 2.0)) /
-    Math.pow(sm_b, 2.0);
+  ep2 = (Math.pow(sma, 2.0) - Math.pow(smb, 2.0)) /
+    Math.pow(smb, 2.0);
 
   /* Precalculate cos (phif) */
   cf = Math.cos(phif);
@@ -307,7 +307,7 @@ function mapXYToLatLon(x, y, lambda0, philambda) {
   nuf2 = ep2 * Math.pow(cf, 2.0);
 
   /* Precalculate Nf and initialize Nfpow */
-  Nf = Math.pow(sm_a, 2.0) / (sm_b * Math.sqrt(1 + nuf2));
+  Nf = Math.pow(sma, 2.0) / (smb * Math.sqrt(1 + nuf2));
   Nfpow = Nf;
 
   /* Precalculate tf */
@@ -432,22 +432,22 @@ function latLonToUTMXY(lat, lon, zone, xy) {
  * The function does not return a value.
  *
  */
-function utmXYToLatLon(x, y, zone, southhemi, latlon) {
-  var cmeridian;
+// function utmXYToLatLon(x, y, zone, southhemi, latlon) {
+//   var cmeridian;
 
-  x -= 500000.0;
-  x /= UTMScaleFactor;
+//   x -= 500000.0;
+//   x /= UTMScaleFactor;
 
-  /* If in southern hemisphere, adjust y accordingly. */
-  y -= 10000000;
+//   /* If in southern hemisphere, adjust y accordingly. */
+//   y -= 10000000;
 
-  y /= UTMScaleFactor;
+//   y /= UTMScaleFactor;
 
-  cmeridian = utmCentralMeridian(zone);
-  mapXYToLatLon(x, y, cmeridian, latlon);
+//   cmeridian = utmCentralMeridian(zone);
+//   mapXYToLatLon(x, y, cmeridian, latlon);
 
-  return;
-}
+//   return;
+// }
 
 
 
