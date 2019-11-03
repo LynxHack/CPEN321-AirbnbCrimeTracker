@@ -156,6 +156,21 @@ class Db {
       });
     });
   }
+
+  getAllQuery() {
+    var that = this;
+    var queryString = "SELECT * FROM " + tableName;
+    return new Promise(function(resolve, reject) {
+      that.con.query(queryString,  function(err, result) {
+        if (err) {
+          console.log(err + " getting data from table!");
+          reject();
+        }
+        console.log("got results crime " + result)
+        resolve(result);
+      });
+    });
+  }
 }
 
 var database = new Db();

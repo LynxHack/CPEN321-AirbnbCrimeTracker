@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const Zip = require("adm-zip");
 const db = require("./dbs");
+const util = require("./util");
 
 const EPOCH_SEC = 1000;
 const EPOCH_MIN = EPOCH_SEC * 60;
@@ -15,8 +16,18 @@ const fileName = "crimedata_csv_all_years.csv";
 const zipFile = "crimedata.zip";
 var cache = null;
 
-class CrimeDataService {
+const vanBound = [-123.27, -123.02, 49.195, 49.315];
+const latincr = (vanBound[1] - vanBound[0]) / resolution;
+const lngincr = (vanBound[3] - vanBound[2]) / resolution;
+var resolution = 100;
+var crimeRates = new Array(resolution);
+for(let row of crimeRates){
+  var tmp = new Array(resolution);
+  tmp.fill(0); //default val
+  row = tmp;
+}
 
+class CrimeDataService {
   initializeCrimeDataSet() {
     var that = this;
 
@@ -44,6 +55,40 @@ class CrimeDataService {
       });
   }
 
+  getIndex(lat, lng){
+    if(lat < vanBound[0] || lat > vanBound[1] || lng < vanBound[2] || lng > vanBound[3]){
+      return [0, 0];
+    }
+    return [Math.floor((lat - vanBound[0]) / latincr), Math.floor((lng - vanBound[2]) / lngincr)]
+  }
+
+  // Fast O(1) lookup for crime safety index
+  getCrimeRate(lat, lng){
+    var point = this.getIndex(lat, lng);
+    return crimeRates[point[0], point[1]];
+  }
+
+  // Precache crime rate in blocks within Vancouver
+  updateCrimeSafety() {
+    return new Promise((res, rej) => {
+      try{
+        db.getAllQuery().then((crimes) => {
+          for(let i = 0; i < crimeRates.length; i++){
+            for(let j = 0; j < crimesRates.length; j++){
+              var currlat = vanBound[0] + latincr * i;
+              var currlng = vanBound[2] + lngincr * j;
+              let convcoord = latlongToUTM(currlat, currlng);
+              let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
+              crimesRates[i][j] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
+            }
+          }
+          res();
+        });
+      }
+      catch(err){rej(err)}
+    })
+  }
+
   getCrimeData(xmin, xmax, ymin, ymax, year) {
     if (!cache) {
       cache = db.sendQuery(xmin, xmax, ymin, ymax, year);
@@ -61,8 +106,9 @@ class CrimeDataService {
         });
         resolve();
       });
-
-      that.requestCrimeData(output);
+      that.requestCrimeData(output).then(() => {
+        that.updateCrimeSafety();
+      })
     });
   }
 
