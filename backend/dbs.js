@@ -15,29 +15,39 @@ var dbConfig = {
 };
 
 class Db {
-  constructor() {
-    this.con = mysql.createConnection(dbConfig);
+  connectToDb() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      that.con = mysql.createConnection(dbConfig);
 
-    this.con.connect(function(err) {
-      if (err) {
-        //console.log(err + " while connecting to mysql!");
-        throw err;
-      }
-      //console.log("Connected to Database!");
-    });
+      that.con.connect(function(err) {
+        if (err) {
+          //console.log(err + " while connecting to mysql!");
+          throw err;
+          reject();
+        }
+        //console.log("Connected to Database!");
+        resolve();
+      });
 
-    this.con.on("error", function(err) {
-      if (err.code === "PROTOCOL_CONNECTION_LOST") {
-        throw err;
-      }
+      that.con.on("error", function(err) {
+        if (err.code === "PROTOCOL_CONNECTION_LOST") {
+          throw err;
+          reject();
+        }
+      });
     });
   }
 
   initializeDb() {
     var that = this;
-    return that.createDatabase().then((value) => {
-      that.createTable();
-    });
+    return that.connectToDb()
+                .then((value) => {
+                  that.createDatabase();
+                })
+                .then((value) => {
+                  that.createTable();
+                });
   }
 
   createDatabase() {
