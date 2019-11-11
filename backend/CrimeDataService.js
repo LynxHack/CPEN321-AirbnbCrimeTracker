@@ -35,10 +35,8 @@ class CrimeDataService {
   initializeCrimeDataSet() {
     var that = this;
 
-    db.initializeDb().then((result) => {
-        db.checkLastUpdate();
-      })
-      .then(function(result) {
+    db.initializeDb().then((result) =>
+        db.checkLastUpdate()).then(function (result) {
         if (!result) {
           //console.log("Table empty, loading crime data...");
           return that.updateCrimeDataSet();
@@ -83,12 +81,14 @@ class CrimeDataService {
       try{
         db.getAllQuery().then((crimes) => {
           for(let i = 0; i < this.crimeRates.length; i++){
-            for(let j = 0; j < this.crimesRates.length; j++){
+            for(let j = 0; j < this.crimeRates.length; j++){
+              //console.log(this.crimeRates + "\n\n");
+              //console.log(crimes + "\n\n");
               var currlat = this.vanBound[0] + this.latincr * i;
               var currlng = this.vanBound[2] + this.lngincr * j;
               let convcoord = latlongToUTM(currlat, currlng);
               let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
-              this.crimesRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
+              this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
             }
           }
           res();
@@ -101,10 +101,7 @@ class CrimeDataService {
   }
 
   getCrimeData(xmin, xmax, ymin, ymax, year) {
-    if (!cache) {
-      cache = db.sendQuery(xmin, xmax, ymin, ymax, year);
-    }
-    return cache;
+    return db.sendQuery(xmin, xmax, ymin, ymax, year);
   }
 
   updateCrimeDataSet() {
@@ -114,12 +111,12 @@ class CrimeDataService {
       output.on("finish", () => {
         that.unzipFile().then((result) => {
           db.loadTable();
+        }).then((result) => {
+          that.updateCrimeSafety();
         });
         resolve();
       });
-      that.requestCrimeData(output).then(() => {
-        that.updateCrimeSafety();
-      });
+      that.requestCrimeData(output)
     });
   }
 
