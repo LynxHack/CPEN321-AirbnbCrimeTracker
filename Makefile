@@ -1,5 +1,5 @@
 test:
-	( cd backend ; npm run test )
+	( cd backend ; npm test )
 	# Insert backend testing here
 
 deps:
