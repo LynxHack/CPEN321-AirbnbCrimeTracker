@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
@@ -15,12 +16,19 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-// import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -31,6 +39,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 
@@ -39,20 +49,32 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
+import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.api.model.TypeFilter;
+import com.google.android.libraries.places.api.net.FetchPlaceRequest;
+import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
 import com.mancj.materialsearchbar.MaterialSearchBar;
+import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     // private LocationManager locationManager;
+
+
+    // private Location mLastKnownLocation;
+    // private LocationCallback locationCallback;
+
+    // private MaterialSearchBar materialSearchBar;
+    private LocationManager locationManager;
     private PlacesClient placesClient;
     private List<AutocompletePrediction> predictionList;
 
@@ -60,11 +82,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     // private LocationCallback locationCallback;
 
     private MaterialSearchBar materialSearchBar;
+    private View mapView;
 
     private LatLng currentLocation;
     private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
-    private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
+    private final String googleSearchKey = "&key=AIzaSyAfhRQ-YOf4K1w32qXkpCoChX1UInALXEQ";
     private List<LatLng> markerList = new ArrayList<LatLng>();
     private LatLng farLeft;
     private LatLng nearRight;
@@ -77,13 +100,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        mapView = mapFragment.getView();
         // For user's current location
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         userLocation();
 
         // Initialize Places.
-        Places.initialize(MapsActivity.this, googleSearchKey);
+        Places.initialize(getApplicationContext(), "AIzaSyAfhRQ-YOf4K1w32qXkpCoChX1UInALXEQ");
 
         // Create a new Places client instance.
         placesClient = Places.createClient(this);
@@ -93,34 +116,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
             @Override
             public void onSearchStateChanged(boolean enabled) {
-                // Might be used when implementing search filters
             }
 
             @Override
             public void onSearchConfirmed(CharSequence text) {
+                //startSearch(text.toString(), true, null, true);
                 searchCity(text.toString());
             }
 
             @Override
             public void onButtonClicked(int buttonCode) {
-                // if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
-                //     // To open menu for relevant filters
-                // }
+                if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
 
-                // else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
-                //     materialSearchBar.disableSearch();
-                // }
-                if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
-                    materialSearchBar.disableSearch();
                 }
 
+                else if (buttonCode == MaterialSearchBar.BUTTON_BACK) {
+                    materialSearchBar.disableSearch();
+                }
             }
         });
 
         materialSearchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                // Most likely will be unused, but currently kept if necessity to use it pops up
             }
 
             @Override
@@ -128,6 +146,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 FindAutocompletePredictionsRequest predictionsRequest = FindAutocompletePredictionsRequest.builder()
                         .setTypeFilter(TypeFilter.CITIES).setSessionToken(token).setQuery(charSequence.toString())
                         .build();
+                PlacesClient placesClient = Places.createClient(MapsActivity.this);
+
                 placesClient.findAutocompletePredictions(predictionsRequest).addOnCompleteListener(new OnCompleteListener<FindAutocompletePredictionsResponse>() {
                     @Override
                     public void onComplete(@NonNull Task<FindAutocompletePredictionsResponse> task) {
@@ -146,9 +166,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     materialSearchBar.showSuggestionsList();
                                 }
                             }
-                        }
-
-                        else {
+                        } else {
                             // Log error
                             System.out.println("FAILURE");
                         }
@@ -158,7 +176,62 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void afterTextChanged(Editable editable) {
-                // Most likely will be unused, but currently kept if necessity to use it pops up
+
+            }
+        });
+        materialSearchBar.setSuggestionsClickListener(new SuggestionsAdapter.OnItemViewClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.P)
+            @Override
+            public void OnItemClickListener(int position, final View v) {
+                if (position >= predictionList.size()){
+                    return;
+                }
+                AutocompletePrediction selectPrediction = predictionList.get(position);
+                String suggestion = materialSearchBar.getLastSuggestions().get(position).toString();
+                materialSearchBar.setText(suggestion);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        materialSearchBar.clearSuggestions();
+                        }
+                    },1000);
+                        materialSearchBar.clearSuggestions();
+                InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                if(inputMethodManager != null)
+                    inputMethodManager.hideSoftInputFromWindow(materialSearchBar.getWindowToken(),InputMethodManager.HIDE_IMPLICIT_ONLY);
+                String PlaceId = selectPrediction.getPlaceId();
+                List<Place.Field> placeField = Arrays.asList(Place.Field.LAT_LNG);
+
+                FetchPlaceRequest fetchPlaceRequest = FetchPlaceRequest.builder(PlaceId,placeField).build();
+                placesClient.fetchPlace((fetchPlaceRequest)).addOnSuccessListener(new OnSuccessListener<FetchPlaceResponse>() {
+                    @Override
+                    public void onSuccess(FetchPlaceResponse fetchPlaceResponse) {
+                        Place place = fetchPlaceResponse.getPlace();
+                        Log.i("mytage","place found" + place.getName());
+                        LatLng latLngOfPlace = place.getLatLng();
+                        if(latLngOfPlace != null ){
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngOfPlace, 14));
+
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        if (e instanceof ApiException){
+                            ApiException apiException = (ApiException) e ;
+                            apiException.printStackTrace();
+                            int statuscode =apiException.getStatusCode();
+                            Log.i("mytag","place not found: " + e.getMessage());
+                            Log.i("mytag","status code:" + statuscode);
+                        }
+
+                    }
+                });
+            }
+
+            @Override
+            public void OnItemDeleteListener(int position, View v) {
+
             }
         });
     }
@@ -253,11 +326,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     @Override
                     public void retry(VolleyError error) throws VolleyError {
-                        // Might implement a retry logic if connection fails within timeout range
                     }
                 });
 
                 VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
+            }
+        });
+        mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        if (mapView != null && mapView.findViewById(Integer.parseInt("1")) != null){
+            View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP,0);
+            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
+            layoutParams.setMargins(0,0,40,180);
+        }
+        mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
+            @Override
+            public boolean onMyLocationButtonClick() {
+                if(materialSearchBar.isSuggestionsVisible())
+                    materialSearchBar.clearSuggestions();
+                if(materialSearchBar.isSearchEnabled())
+                    materialSearchBar.disableSearch();
+                return false;
             }
         });
     }
