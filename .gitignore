@@ -2,3 +2,4 @@
 /backend/.env
 /backend/crimedata.zip
 /backend/crimedata_csv_all_years.csv
+core
