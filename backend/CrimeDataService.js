@@ -15,9 +15,6 @@ const COVurl = "geodash.vpd.ca";
 const path = "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41";
 const fileName = "crimedata_csv_all_years.csv";
 // const zipFile = "crimedata.zip";
-var cache = null;
-
-
 
 class CrimeDataService {
   constructor(){
@@ -26,35 +23,39 @@ class CrimeDataService {
     this.latincr = (this.vanBound[1] - this.vanBound[0]) / this.resolution;
     this.lngincr = (this.vanBound[3] - this.vanBound[2]) / this.resolution;
     this.crimeRates = new Array(this.resolution);
-    for(let row of this.crimeRates){
-      var tmp = new Array(this.resolution);
-      tmp.fill(0); //default val
-      row = tmp;
+    for(var i = 0; i < this.resolution; i++) {
+      this.crimeRates[i] = new Array(this.resolution);
+      this.crimeRates[i].fill(0); //default val
     }
   }
   initializeCrimeDataSet() {
     var that = this;
 
-    db.initializeDb().then((result) =>
-        db.checkLastUpdate()).then(function (result) {
-        if (!result) {
-          //console.log("Table empty, loading crime data...");
-          return that.updateCrimeDataSet();
-        } else {
-          var date = new Date(result.created_at);
-          //console.log("Database last updated was " + date);
-
-          if (new Date() - EPOCH_WEEK > date) {
-            //console.log("Database last updated was more than a week ago, loading crime data...");
-            return that.updateCrimeDataSet();
+    return new Promise(function(resolve, reject) {
+      db.initializeDb()
+        .then((result) => db.checkLastUpdate())
+        .then(function (result) {
+          if (!result) {
+            // console.log("Table empty, loading crime data...");
+            that.updateCrimeDataSet().then((result) => resolve());
           } else {
-            //console.log("Table up to date!");
-            return new Promise(function(resolve, reject) {
-              resolve();
-            });
+            var date = new Date(result.created_at);
+            // console.log(result.created_at);
+            // console.log("Database last updated was " + date);
+
+            if (new Date() - EPOCH_WEEK > date) {
+              // console.log("Database last updated was more than a week ago, loading crime data...");
+              that.updateCrimeDataSet().then((result) => resolve());
+            } else {
+              //console.log("Table up to date!");
+                resolve();
+            }
           }
-        }
-      });
+        }).catch((err) => {
+            reject(err);
+        });
+    })
+
   }
 
   between(x, min, max) {
@@ -62,7 +63,7 @@ class CrimeDataService {
   }
 
   getIndex(lat, lng){
-    if(!this.between(lat, this.vanBound[0], this.vanBound[1]) || this.between(lng, this.vanBound[2], this.vanBound[3])){
+    if(!this.between(lat, this.vanBound[0], this.vanBound[1]) || !this.between(lng, this.vanBound[2], this.vanBound[3])){
       return [0,0];
     }
 
@@ -72,31 +73,28 @@ class CrimeDataService {
   // Fast O(1) lookup for crime safety index
   getCrimeRate(lat, lng){
     var point = this.getIndex(lat, lng);
-    return this.crimeRates[point[0], point[1]];
+    return this.crimeRates[point[0]][point[1]];
   }
 
   // Precache crime rate in blocks within Vancouver
   updateCrimeSafety() {
     return new Promise((res, rej) => {
-      try{
-        db.getAllQuery().then((crimes) => {
-          for(let i = 0; i < this.crimeRates.length; i++){
-            for(let j = 0; j < this.crimeRates.length; j++){
-              //console.log(this.crimeRates + "\n\n");
-              //console.log(crimes + "\n\n");
-              var currlat = this.vanBound[0] + this.latincr * i;
-              var currlng = this.vanBound[2] + this.lngincr * j;
-              let convcoord = latlongToUTM(currlat, currlng);
-              let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
-              this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
-            }
+      db.getAllQuery().then((crimes) => {
+        for(let i = 0; i < this.crimeRates.length; i++){
+          for(let j = 0; j < this.crimeRates[i].length; j++){
+            //console.log(this.crimeRates + "\n\n");
+            //console.log(crimes + "\n\n");
+            var currlat = this.vanBound[0] + this.latincr * i;
+            var currlng = this.vanBound[2] + this.lngincr * j;
+            let convcoord = latlongToUTM(currlat, currlng);
+            let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
+            this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
           }
-          res();
-        });
-      }
-      catch(err){
-        rej(err);
-      }
+        }
+        res();
+      }).catch((err) => {
+          rej(err);
+        })
     });
   }
 
@@ -110,13 +108,15 @@ class CrimeDataService {
       const output = fs.createWriteStream("crimedata.zip");
       output.on("finish", () => {
         that.unzipFile().then((result) => {
-          db.loadTable();
+          return db.loadTable();
         }).then((result) => {
-          that.updateCrimeSafety();
-        });
-        resolve();
+          return that.updateCrimeSafety();
+        }).then((result) => {
+          resolve();
+        })
+        .catch((error) => reject(error));
       });
-      that.requestCrimeData(output)
+      that.requestCrimeData(output).catch((error) => reject(error))
     });
   }
 
@@ -135,23 +135,28 @@ class CrimeDataService {
       request.on("response", (response) => {
         //console.log("Request to City of Vancouver API Successful with code " + response.statusCode);
         //console.log("Printing response contents to zip...");
-        response.pipe(output);
+          response.pipe(output);
+          resolve();
         //console.log("Response has been saved to file!");
-        resolve();
       }).on("err", (error) => {
         //console.log(error + "Request to City of Vancouver API Failed");
-        reject();
+        reject(error);
       });
     });
   }
 
   unzipFile() {
     return new Promise(function(resolve, reject) {
-      //console.log("Extracting crime data from zipped file...");
-      var file = new Zip("crimedata.zip");
-      file.extractEntryTo(fileName, "./", false, true);
-      //console.log("Crime Data has been extracted!");
-      resolve();
+      try {
+        //console.log("Extracting crime data from zipped file...");
+        var file = new Zip("crimedata.zip");
+        file.extractEntryTo(fileName, "./", false, true);
+        //console.log("Crime Data has been extracted!");
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+
     });
   }
 }
