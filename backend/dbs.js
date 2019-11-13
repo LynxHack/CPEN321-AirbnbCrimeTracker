@@ -23,18 +23,14 @@ class Db {
       that.con.connect(function(err) {
         if (err) {
           //console.log(err + " while connecting to mysql!");
-          throw err;
-          reject();
+          reject(err);
         }
         //console.log("Connected to Database!");
         resolve();
       });
 
       that.con.on("error", function(err) {
-        if (err.code === "PROTOCOL_CONNECTION_LOST") {
-          throw err;
-          reject();
-        }
+          reject(err);
       });
     });
   }
@@ -43,10 +39,13 @@ class Db {
     var that = this;
     return that.connectToDb()
                 .then((value) => {
-                  that.createDatabase();
+                  return that.createDatabase();
                 })
                 .then((value) => {
-                  that.createTable();
+                  return that.createTable();
+                })
+                .catch((error) => {
+                  throw error;
                 });
   }
 
@@ -57,20 +56,19 @@ class Db {
       that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
         if (err) {
           //console.log(err + " while creating database!");
-          reject();
+          reject(err);
         }
         //console.log("Crime data database created");
-      });
-
-      that.con.changeUser({
-        database: dbName
-      }, function(err) {
-        if (err) {
-          //console.log(err + " while changing database!");
-          reject();
-        }
-        //console.log("Swapping to crime_data database");
-        resolve();
+        that.con.changeUser({
+          database: dbName
+        }, function(err) {
+          if (err) {
+            //console.log(err + " while changing database!");
+            reject(err);
+          }
+          //console.log("Swapping to crime_data database");
+          resolve();
+        });
       });
     });
   }
@@ -81,7 +79,7 @@ class Db {
       that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, month INT, day INT, hour INT, minute INT, hundred_block VARCHAR(255), neighbourhood VARCHAR(255), x FLOAT, y FLOAT, id INT AUTO_INCREMENT PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", function(err, result) {
         if (err) {
           //console.log(err + " while loading table!");
-          reject();
+          reject(err);
         }
         //console.log("Crime data table created");
         resolve();
@@ -98,7 +96,7 @@ class Db {
         if (err) {
           //console.log(err + " while loading crime data into table!");
           // console.timeEnd("dataLoad");
-          reject();
+          reject(err);
         } else {
           //console.log("Crime data loaded into table");
           // console.timeEnd("dataLoad");
@@ -114,21 +112,11 @@ class Db {
       that.con.query("DELETE FROM " + tableName, function(err, result) {
         if (err) {
           //console.log(err + " while loading table!");
-          reject();
+          reject(err);
         }
         //console.log("Cleared Crime data table");
         resolve();
       });
-    });
-  }
-
-  printTopFive() {
-    this.con.query("SELECT * FROM " + tableName + " LIMIT 5", function(err, result) {
-      if (err) {
-        //console.log(err + " while loading table!");
-      }
-      //console.log("Printing first 5 rows of table...\n");
-      //console.log(result);
     });
   }
 
@@ -138,9 +126,13 @@ class Db {
       that.con.query("SELECT created_at FROM " + tableName + " LIMIT 1", function(err, result) {
         if (err) {
           //console.log(err + " getting data from table!");
-          reject();
+          reject(err);
         }
-        resolve(result[0]);
+        if (result.length == 0) {
+          reject("No results found");
+        } else {
+          resolve(result[0]);
+        }
       });
     });
   }
@@ -160,7 +152,7 @@ class Db {
       that.con.query(queryString, params, function(err, result) {
         if (err) {
           //console.log(err + " getting data from table!");
-          reject();
+          reject(err);
         }
         resolve(result);
       });
@@ -174,7 +166,7 @@ class Db {
       that.con.query(queryString,  function(err, result) {
         if (err) {
           // console.log(err + " getting data from table!");
-          reject();
+          reject(err);
         }
         // console.log("got results crime " + result)
         resolve(result);

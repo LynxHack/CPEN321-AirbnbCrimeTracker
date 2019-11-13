@@ -207,10 +207,10 @@ function latLonToUTMXY(lat, lon, zone, xy) {
   /* Adjust easting and northing for UTM system. */
   xy[0] = xy[0] * UTMScaleFactor + 500000.0;
   xy[1] = xy[1] * UTMScaleFactor;
-  if (xy[1] < 0.0) {
-    // xy[1] = xy[1] + 10000000;
-    xy[1] = xy[1] + Math.pow(10, 8);
-  }
+  // if (xy[1] < 0.0) {
+  //   xy[1] = xy[1] + 10000000;
+  //   xy[1] = xy[1] + Math.pow(10, 8);
+  // }
 
   return zone;
 }
