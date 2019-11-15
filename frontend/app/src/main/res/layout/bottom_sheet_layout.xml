@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/airbnb_image"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        />
+
+    <TextView
+        android:id="@+id/sheet_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="28sp"
+        android:textColor="@color/quantum_black_100"
+        android:layout_gravity="left"
+        android:layout_marginBottom="5dp"
+        />
+
+    <TextView
+        android:id="@+id/room_capacity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:layout_gravity="left"
+        />
+
+    <TextView
+        android:id="@+id/rating"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:layout_gravity="left"
+        />
+
+    <TextView
+        android:id="@+id/num_reviews"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        android:layout_gravity="left"
+        android:layout_marginBottom="5dp"
+        />
+
+    <Button
+        android:id="@+id/favourite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:background="@drawable/toggle_on"
+        android:textColor="@color/airbnbRed"
+        android:layout_marginBottom="5dp"
+        />
+
+    <Button
+        android:id="@+id/book"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:background="@drawable/book_button"
+        android:textColor="@color/white"
+        android:text="Book Room"
+        style="?android:attr/borderlessButtonStyle"
+        />
+
+</LinearLayout>

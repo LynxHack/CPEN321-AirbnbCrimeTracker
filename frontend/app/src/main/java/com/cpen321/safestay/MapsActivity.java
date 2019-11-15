@@ -7,24 +7,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.ApiException;
@@ -35,6 +36,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
 
@@ -56,13 +58,18 @@ import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -70,6 +77,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private PlacesClient placesClient;
     private List<AutocompletePrediction> predictionList;
+    private static final String CHANNEL_ID = "channel1";
+    private NotificationCompat.Builder builder;
 
     private Location mLastKnownLocation;
     private LocationCallback locationCallback;
@@ -80,10 +89,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LatLng currentLocation;
     private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
-    private final String googleSearchKey = "&key=AIzaSyAfhRQ-YOf4K1w32qXkpCoChX1UInALXEQ";
+    private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
     private List<LatLng> markerList = new ArrayList<LatLng>();
+    private Map<Integer, AirbnbRental> rentalMap = new HashMap<Integer, AirbnbRental>();
     private LatLng farLeft;
     private LatLng nearRight;
+    private boolean timerStarted;
+    private String searchedCity = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,13 +105,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        mapView = mapFragment.getView();
+
         // For user's current location
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         userLocation();
 
         // Initialize Places.
-        Places.initialize(getApplicationContext(), "AIzaSyAfhRQ-YOf4K1w32qXkpCoChX1UInALXEQ");
+        Places.initialize(getApplicationContext(), "AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE");
+        timerStarted = false;
 
         // Create a new Places client instance.
         placesClient = Places.createClient(this);
@@ -116,6 +129,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onSearchConfirmed(CharSequence text) {
                 //startSearch(text.toString(), true, null, true);
                 searchCity(text.toString());
+                searchedCity = text.toString();
             }
 
             @Override
@@ -175,7 +189,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
         materialSearchBar.setSuggestionsClickListener(new SuggestionsAdapter.OnItemViewClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.P)
             @Override
             public void OnItemClickListener(int position, final View v) {
                 if (position >= predictionList.size()){
@@ -184,13 +197,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 AutocompletePrediction selectPrediction = predictionList.get(position);
                 String suggestion = materialSearchBar.getLastSuggestions().get(position).toString();
                 materialSearchBar.setText(suggestion);
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        materialSearchBar.clearSuggestions();
-                        }
-                    },1000);
-                        materialSearchBar.clearSuggestions();
+                materialSearchBar.clearSuggestions();
                 InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 if(inputMethodManager != null)
                     inputMethodManager.hideSoftInputFromWindow(materialSearchBar.getWindowToken(),InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -236,10 +243,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        createNotificationChannel();
+
+        builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_star_favourite)
+                .setContentTitle("SafeStay")
+                .setContentText("Don't wait! Book that Airbnb in Vancouver!")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+
         // If user gives permission for current location, zoom in on their coordinates
         if (currentLocation != null) {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 13.0f));
         }
+
+
+        /*mMap.addMarker(new MarkerOptions().position(currentLocation)
+                .title("You are here!")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));*/
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Integer id = (Integer) marker.getTag();
+                AirbnbRental current = rentalMap.get(id);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current.getLatLng(),
+                        15f));
+                BottomSheetDialog bottomSheet = new BottomSheetDialog(current);
+                bottomSheet.show(getSupportFragmentManager(), "test");
+                return false;
+            }
+        });
 
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
@@ -250,7 +284,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 nearRight = visibleRegion.nearRight;
 
                 /*Map<String, String> params = new HashMap<>();
-
                 params.put("xmin", Double.toString(farLeft.longitude));
                 params.put("xmax", Double.toString(nearRight.longitude));
                 params.put("ymin", Double.toString(nearRight.latitude));
@@ -274,10 +307,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         JSONObject current = listings.getJSONObject(i);
 
                                         LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
+                                        Integer id = current.getInt("id");
 
-                                        if (!markerList.contains(coords)) {
+                                        if (!rentalMap.containsKey(id)) {
 
+                                            String name = current.getString("name");
+                                            double rating = current.getDouble("star_rating");
+                                            int reviewCount = current.getInt("reviews_count");
+                                            int capacity = current.getInt("person_capacity");
+                                            String url = current.getString("picture");
                                             int safety_index = current.getInt("safety_index");
+
+                                            AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index);
+
                                             float markerColour;
 
                                             if (safety_index > 6)
@@ -286,13 +328,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                                 markerColour = BitmapDescriptorFactory.HUE_YELLOW;
                                             else markerColour = BitmapDescriptorFactory.HUE_RED;
 
-                                            mMap.addMarker(new MarkerOptions().position(coords)
-                                                    .title(current.getString("name")
-                                                            + "\nMax Occupancy: " + current.getInt("person_capacity")
-                                                            + "\nRating: " + current.getDouble("star_rating") + " Stars")
+                                            Marker marker = mMap.addMarker(new MarkerOptions().position(coords)
                                                     .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+                                            marker.setTag(id);
 
-                                            markerList.add(coords);
+                                            rentalMap.put(id, rental);
                                         }
 
                                     }
@@ -309,7 +349,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_LONG).show();
+                                //Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_LONG).show();
                                 if (error == null || error.networkResponse == null) {
                                     return;
                                 }
@@ -344,25 +384,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
 
                 VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
-            }
-        });
-        mMap.setMyLocationEnabled(true);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        if (mapView != null && mapView.findViewById(Integer.parseInt("1")) != null){
-            View locationButton = ((View) mapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
-            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP,0);
-            layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
-            layoutParams.setMargins(0,0,40,180);
-        }
-        mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
-            @Override
-            public boolean onMyLocationButtonClick() {
-                if(materialSearchBar.isSuggestionsVisible())
-                    materialSearchBar.clearSuggestions();
-                if(materialSearchBar.isSearchEnabled())
-                    materialSearchBar.disableSearch();
-                return false;
             }
         });
     }
@@ -424,5 +445,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
 
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "SafeStay";
+            String description = "Test";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        final Context context = this;
+
+        if (!timerStarted) {
+            timerStarted = true;
+            if (!(searchedCity == "" || searchedCity == null))
+                builder.setContentText("Don't wait! Book that Airbnb in " + searchedCity + "!");
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+
+                    // notificationId is a unique int for each notification that you must define
+                    notificationManager.notify(1, builder.build());
+                    timerStarted = false;
+                }
+            }, 5 * 1000);
+        }
+
+        super.onStop();
     }
 }
