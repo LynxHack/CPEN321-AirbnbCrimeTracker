@@ -2,6 +2,7 @@ package com.cpen321.safestay;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -35,8 +36,20 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
         ImageView image = v.findViewById(R.id.airbnb_image);
         Picasso.with(this.getContext()).load(rental.getURL()).into(image);
 
+        int safetyIndex = rental.getSafetyIndex();
+        int textColour;
+
+        if (safetyIndex > 6)
+            textColour = Color.GREEN;
+        else if (safetyIndex > 4)
+            textColour = Color.YELLOW;
+        else textColour = Color.RED;
+
         TextView title = v.findViewById(R.id.sheet_title);
         title.setText(rental.getName());
+
+        /*View divider = v.findViewById(R.id.divider);
+        divider.setBackgroundColor(textColour); */
 
         TextView capacity = v.findViewById(R.id.room_capacity);
         capacity.setText("Capacity: " + rental.getCapacity() + " Occupants");

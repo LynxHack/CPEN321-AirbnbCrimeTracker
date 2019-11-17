@@ -96,6 +96,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LatLng nearRight;
     private boolean timerStarted;
     private String searchedCity = "";
+    private BottomSheetDialog bottomSheet;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -265,11 +266,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+
+                if (bottomSheet != null)
+                    bottomSheet.dismiss();
                 Integer id = (Integer) marker.getTag();
                 AirbnbRental current = rentalMap.get(id);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current.getLatLng(),
                         15f));
-                BottomSheetDialog bottomSheet = new BottomSheetDialog(current);
+                bottomSheet = new BottomSheetDialog(current);
                 bottomSheet.show(getSupportFragmentManager(), "test");
                 return false;
             }
