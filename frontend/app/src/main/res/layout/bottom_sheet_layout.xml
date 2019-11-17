@@ -3,7 +3,6 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_horizontal"
-    android:padding="16dp"
     android:id="@+id/bottomSheet">
 
     <ImageView
@@ -11,6 +10,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
+        android:maxHeight="350dp"
         android:scaleType="fitCenter"
         />
 
@@ -21,6 +21,8 @@
         android:textSize="28sp"
         android:textColor="@color/quantum_black_100"
         android:layout_gravity="left"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:layout_marginBottom="2dp"
         />
 
@@ -36,6 +38,8 @@
         android:layout_height="wrap_content"
         android:textSize="25sp"
         android:layout_gravity="left"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:layout_marginTop="2dp"
         />
 
@@ -45,6 +49,8 @@
         android:layout_height="wrap_content"
         android:textSize="25sp"
         android:layout_gravity="left"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         />
 
     <TextView
@@ -53,6 +59,8 @@
         android:layout_height="wrap_content"
         android:textSize="25sp"
         android:layout_gravity="left"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:layout_marginBottom="5dp"
         />
 
@@ -64,6 +72,8 @@
         android:background="@drawable/toggle_on"
         android:textColor="@color/airbnbRed"
         android:layout_marginBottom="5dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         />
 
     <Button
@@ -74,6 +84,9 @@
         android:background="@drawable/book_button"
         android:textColor="@color/white"
         android:text="Book Room"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="16dp"
         style="?android:attr/borderlessButtonStyle"
         />
 

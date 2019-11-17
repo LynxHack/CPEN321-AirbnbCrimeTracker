@@ -333,6 +333,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             else markerColour = BitmapDescriptorFactory.HUE_RED;
 
                                             Marker marker = mMap.addMarker(new MarkerOptions().position(coords)
+                                                    .title("this is a marker")
                                                     .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
                                             marker.setTag(id);
 
