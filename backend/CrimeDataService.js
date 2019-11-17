@@ -64,6 +64,7 @@ class CrimeDataService {
 
   getIndex(lat, lng){
     if(!this.between(lat, this.vanBound[0], this.vanBound[1]) || !this.between(lng, this.vanBound[2], this.vanBound[3])){
+      // console.log("Parameters outside of bounds!")
       return [0,0];
     }
 
