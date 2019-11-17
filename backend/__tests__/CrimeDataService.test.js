@@ -8,9 +8,7 @@ jest.mock('fs');
 jest.mock('http');
 jest.mock('adm-zip');
 
-beforeEach(() => {
 
-});
 
 describe('Testing Crime Data Service initializeCrimeDataSet()', () => {
   beforeEach(() => {
