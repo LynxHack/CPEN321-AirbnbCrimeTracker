@@ -4,6 +4,7 @@ const express = require("express");
 const router = new express.Router();
 const bodyParser = require("body-parser");
 const crimeDataService = require("./CrimeDataService");
+const userService = require("./UserService");
 
 // Middleware
 router.use(bodyParser.urlencoded({extended: true}));
@@ -37,6 +38,47 @@ router.get("/getListing", (req, res) => {
   }).catch((error) => {
     res.status(500).send("Failed to load from Airbnb Microservice");
   });
+});
+
+router.put("/favourites", (req, res) => {
+  var userId = req.body.userId;
+  var airbnbId = req.body.airbnbId;
+    if (!userId || !airbnbId) {
+      res.status(400).send("Invalid params");
+    }
+
+    userService.addFavourite(userId, airbnbId)
+    .then(res.status(200).end())
+    .catch((error) => {
+      res.status(500).send("Error while adding airbnb to favourites!");
+    });
+});
+
+router.delete("/favourites", (req, res) => {
+  var userId = req.query["userId"];
+  var airbnbId = req.query["airbnbId"];
+    if (!userId || !airbnbId) {
+      res.status(400).send("Invalid params");
+    }
+
+    userService.deleteFavourite(userId, airbnbId)
+    .then(res.status(200).end())
+    .catch((error) => {
+      res.status(500).send("Error while removing airbnb from favourites!");
+    });
+});
+
+router.get("/favourites", (req, res) => {
+  var userId = req.query["userId"];
+    if (!userId) {
+      res.status(400).send("Invalid params");
+    }
+
+    userService.getFavourites(userId)
+    .then((result) => res.status(200).send(JSON.stringify(result)))
+    .catch((error) => {
+      res.status(500).send("Error while getting airbnbs from favourites!");
+    });
 });
 
 // Look under listings for airbnb posts

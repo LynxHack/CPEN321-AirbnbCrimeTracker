@@ -6,6 +6,7 @@ const latlongToUTM = require("./latlongToUTM");
 var dbName = "crime_data";
 var tableName = "crime_data";
 var fileName = "crimedata_csv_all_years.csv";
+var favouritesTableName = "userFavourites";
 
 var dbConfig = {
   host: "localhost",
@@ -39,7 +40,7 @@ class Db {
     var that = this;
     return that.connectToDb()
                 .then((value) => {
-                  return that.createDatabase();
+                  return that.createDatabase()
                 })
                 .then((value) => {
                   return that.createTable();
@@ -78,11 +79,19 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, month INT, day INT, hour INT, minute INT, hundred_block VARCHAR(255), neighbourhood VARCHAR(255), x FLOAT, y FLOAT, id INT AUTO_INCREMENT PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", function(err, result) {
         if (err) {
-          //console.log(err + " while loading table!");
+          //console.log(err + " while creating table!");
           reject(err);
         }
+
         //console.log("Crime data table created");
-        resolve();
+        that.con.query("CREATE TABLE IF NOT EXISTS " + favouritesTableName + " (userId VARCHAR(255) NOT NULL, airbnbId VARCHAR(255) NOT NULL, PRIMARY KEY(userId, airbnbId))", function(err, result) {
+          if (err) {
+            //console.log(err + " while creating favourites table!");
+            reject(err);
+          }
+        //console.log("favourites table created");
+          resolve();
+        });
       });
     });
   }
@@ -109,9 +118,9 @@ class Db {
   clearTable() {
     var that = this;
     return new Promise(function(resolve, reject) {
-      that.con.query("DELETE FROM " + tableName, function(err, result) {
+      that.con.query("DROP TABLE " + favouritesTableName, function(err, result) {
         if (err) {
-          //console.log(err + " while loading table!");
+          //console.log(err + " while clearing table!");
           reject(err);
         }
         //console.log("Cleared Crime data table");
@@ -129,7 +138,7 @@ class Db {
           reject(err);
         }
         if (result.length == 0) {
-          reject("No results found");
+          resolve();
         } else {
           resolve(result[0]);
         }
@@ -170,6 +179,55 @@ class Db {
         }
         // console.log("got results crime " + result)
         resolve(result);
+      });
+    });
+  }
+
+  addFavourite(userId, airbnbId) {
+    var that = this;
+    var params = [userId, airbnbId];
+    var queryString = "INSERT IGNORE INTO " + favouritesTableName + "(userId, airbnbId) VALUES ( ?, ? )";
+    return new Promise(function(resolve, reject) {
+      that.con.query(queryString, params,  function(err, result) {
+        if (err) {
+           //console.log(err + " adding favourite to table!");
+          reject(err);
+        }
+        //console.log("added " + userId + " " + airbnbId + " favourite to table!");
+        resolve();
+      });
+    });
+  }
+
+  deleteFavourite(userId, airbnbId) {
+    var that = this;
+    var params = [userId, airbnbId];
+    var queryString = "DELETE FROM " + favouritesTableName + " WHERE userId = ? AND airbnbId = ?";
+    return new Promise(function(resolve, reject) {
+      that.con.query(queryString, params,  function(err, result) {
+        if (err) {
+           //console.log(err + " deleteing favourite from table!");
+          reject(err);
+        }
+        //console.log("remove " + userId + " " + airbnbId + " favourite from table!");
+        resolve();
+      });
+    });
+  }
+
+  getFavourites(userId) {
+    var that = this;
+    var params = [userId];
+    var queryString = "SELECT airbnbId FROM " + favouritesTableName + " WHERE userId = ?";
+    return new Promise(function(resolve, reject) {
+      that.con.query(queryString, params,  function(err, result) {
+        if (err) {
+           //console.log(err + " getting favourite data from table!");
+          reject(err);
+        }
+        var retList = result.map((row) => row.airbnbId);
+
+        resolve(retList);
       });
     });
   }
