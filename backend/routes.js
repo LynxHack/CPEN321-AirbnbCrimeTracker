@@ -82,9 +82,9 @@ router.get("/favourites", (req, res) => {
 });
 
 // Look under listings for airbnb posts
-// router.get("/crimes", async (req, res) => {
-//     crimeDataService.getCrimeData(req.query.xmin, req.query.xmax, req.query.ymin, req.query.ymax, req.query.year)
-//                     .then((result) => res.status(200).send(JSON.stringify(result)));
-// });
+router.get("/crimes", async (req, res) => {
+    crimeDataService.getCrimeData(req.query.xmin, req.query.xmax, req.query.ymin, req.query.ymax, req.query.year)
+                    .then((result) => res.status(200).send(JSON.stringify(result)));
+});
 
 module.exports = router;

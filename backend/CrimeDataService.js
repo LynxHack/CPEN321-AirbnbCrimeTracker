@@ -4,6 +4,7 @@ const Zip = require("adm-zip");
 const db = require("./dbs");
 const util = require("./util");
 const latlongToUTM = require("./latlongToUTM");
+const csv = require("csv");
 
 const EPOCH_SEC = 1000;
 const EPOCH_MIN = EPOCH_SEC * 60;
@@ -11,8 +12,26 @@ const EPOCH_HOUR = EPOCH_MIN * 60;
 const EPOCH_DAY = EPOCH_HOUR * 24;
 const EPOCH_WEEK = EPOCH_DAY * 7;
 
-const COVurl = "geodash.vpd.ca";
-const path = "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41";
+const COVconfig = {
+  url: "http://" + "geodash.vpd.ca",
+  path: "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41",
+  host: "geodash.vpd.ca",
+  headers: {
+    "Accept-Encoding": "gzip,deflate",
+    "connection": "keep-alive"
+  }
+}
+
+const COCconfig = {
+  url: "http://" + "data.cityofchicago.org",
+  path: "/api/views/w98m-zvie/rows.csv?accessType=DOWNLOAD",
+  host: "data.cityofchicago.org",
+  headers: {
+    "Accept-Encoding": "deflate",
+    "connection": "keep-alive"
+  }
+}
+
 const fileName = "crimedata_csv_all_years.csv";
 // const zipFile = "crimedata.zip";
 
@@ -36,21 +55,23 @@ class CrimeDataService {
         .then((result) => db.checkLastUpdate())
         .then(function (result) {
           if (!result) {
-            // console.log("Table empty, loading crime data...");
+            //console.log("Table empty, loading crime data...");
             that.updateCrimeDataSet().then((result) => resolve());
           } else {
             var date = new Date(result.created_at);
-            // console.log(result.created_at);
-            // console.log("Database last updated was " + date);
+            //console.log(result.created_at);
+            //console.log("Database last updated was " + date);
 
             if (new Date() - EPOCH_WEEK > date) {
-              // console.log("Database last updated was more than a week ago, loading crime data...");
+              //console.log("Database last updated was more than a week ago, loading crime data...");
               that.updateCrimeDataSet().then((result) => resolve());
             } else {
               //console.log("Table up to date!");
-                resolve();
+              resolve();
             }
           }
+        }).then((result) => {
+          console.log("Server ready for requests!");
         }).catch((err) => {
             reject(err);
         });
@@ -87,7 +108,7 @@ class CrimeDataService {
             //console.log(crimes + "\n\n");
             var currlat = this.vanBound[0] + this.latincr * i;
             var currlng = this.vanBound[2] + this.lngincr * j;
-            let convcoord = latlongToUTM(currlat, currlng);
+            //let convcoord = latlongToUTM.latLonToUTM(currlat, currlng);
             let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
             this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
           }
@@ -105,42 +126,59 @@ class CrimeDataService {
 
   updateCrimeDataSet() {
     var that = this;
+    return that.updateVancouverDataSet()
+                  .then((result) => {
+                    return that.updateChicagoDataSet()
+                  })
+                  .then((result) => {
+                    return that.updateCrimeSafety();
+                  });
+  }
+
+  updateVancouverDataSet() {
+    var that = this;
     return new Promise(function(resolve, reject) {
       const output = fs.createWriteStream("crimedata.zip");
       output.on("finish", () => {
-        that.unzipFile().then((result) => {
-          return db.loadTable();
-        }).then((result) => {
-          return that.updateCrimeSafety();
-        }).then((result) => {
+        that.unzipFile()
+        .then((result) => {that.mapCoordinates()})
+        .then((result) => {
+          const parseColumns = "(type, year, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, lat, lng)"
+          return db.loadTable("crimedata_cov.csv", "crime_data", parseColumns);
+        })
+        .then((result) => resolve())
+        .catch((error) => reject(error));
+      });
+      that.requestCrimeData(output, COVconfig).catch((error) => reject(error));
+    });
+  }
+
+  updateChicagoDataSet() {
+    var that = this;
+    return new Promise(function(resolve, reject) {
+      const output = fs.createWriteStream("crimes_-_2019.csv");
+      output.on("finish", () => {
+        //ID CaseNumber	Date	Block	IUCR	PrimaryTypeDescription	Secondary, LocationDescription	Arrest	Domestic	Beat District Ward	CommunityArea	FBICode	XCoordinate	YCoordinate	Year Updated Latitude	Longitude	Location
+        const parseColumns = "(@dummy, @dummy, @dummy, @dummy, @dummy, type, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, year, @dummy, lat, lng, @dummy)"
+        db.loadTable("crimes_-_2019.csv", "crime_data", parseColumns).then((result) => {
           resolve();
         })
         .catch((error) => reject(error));
       });
-      that.requestCrimeData(output).catch((error) => reject(error))
+      that.requestCrimeData(output, COCconfig).catch((error) => reject(error));
     });
   }
 
-  requestCrimeData(output) {
+  requestCrimeData(output, config) {
     return new Promise(function(resolve, reject) {
-      const request = http.get({
-        url: "http://" + COVurl,
-        path,
-        host: COVurl,
-        headers: {
-          "Accept-Encoding": "gzip,deflate",
-          "connection": "keep-alive"
-        }
-      });
-
+      const request = http.get(config);
       request.on("response", (response) => {
-        //console.log("Request to City of Vancouver API Successful with code " + response.statusCode);
-        //console.log("Printing response contents to zip...");
+        //console.log("Request to " + config.url + " Successful with code " + response.statusCode);
           response.pipe(output);
           resolve();
-        //console.log("Response has been saved to file!");
+        //console.log(config.url + " Response has been saved to file!");
       }).on("err", (error) => {
-        //console.log(error + "Request to City of Vancouver API Failed");
+        //console.log(error + " Request to " + config.url + " Failed");
         reject(error);
       });
     });
@@ -158,6 +196,31 @@ class CrimeDataService {
         reject(err);
       }
 
+    });
+  }
+
+  mapCoordinates() {
+    return new Promise(function(resolve, reject) {
+      var readStream = fs.createReadStream("crimedata_csv_all_years.csv");
+      var writeStream = fs.createWriteStream("crimedata_cov.csv");
+
+      //console.log("Converting COV file to use latitude longitude...")
+      readStream.pipe(csv.parse({ columns: true }))
+      .pipe(csv.transform(function(data) {
+          if(typeof(data['X']) != 'X') {
+            let x = data['X'];
+            let y = data['Y'];
+            var latlon = new Array(2)
+            latlongToUTM.UTMXYToLatLon(x, y, latlon)
+            data['X'] = latlon[0];
+            data['Y'] = latlon[1];
+          }
+          return data;
+      }))
+      .pipe(csv.stringify())
+      .pipe(writeStream);
+
+      writeStream.on('finish', () => {resolve()})
     });
   }
 }
