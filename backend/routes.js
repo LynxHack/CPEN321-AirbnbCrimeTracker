@@ -23,6 +23,8 @@ router.get("/getListing", (req, res) => {
   var yrange = [Number(req.query["ymin"]), Number(req.query["ymax"])];
   var coord = [(yrange[0] + yrange[1])/2,(xrange[0] + xrange[1])/2];
   var mainquery = reverse.lookup(coord[0], coord[1], "ca").city.split(" ")[0];
+  mainquery = 'Vancouver';
+  // console.log(mainquery);
   return axios.get(`http://localhost:${pythonport}/${mainquery}`).then((result) => {
     var pruned = result.data.explore_tabs[0].sections.pop();
     pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {return x.listing;});
@@ -31,6 +33,7 @@ router.get("/getListing", (req, res) => {
                             ({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture}))(listing);
                   });
     // Size of radius to check for crimes
+    // console.log(pruned);
     for(let listing of pruned){
       listing.safetyIndex = crimeDataService.getCrimeRate(listing.lat, listing.lng);
     }

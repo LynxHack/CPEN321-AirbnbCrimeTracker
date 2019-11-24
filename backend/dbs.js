@@ -14,6 +14,7 @@ var dbConfig = {
   user: "root",
   password: "password",
   port: "3306"
+  // database: "crime_data"
 };
 
 class Db {
@@ -27,7 +28,7 @@ class Db {
           //console.log(err + " while connecting to mysql!");
           reject(err);
         }
-        //console.log("Connected to Database!");
+        console.log("Connected to Database!");
         resolve();
       });
 
@@ -62,18 +63,18 @@ class Db {
 
       that.con.query("CREATE DATABASE IF NOT EXISTS " + dbName, function(err, result) {
         if (err) {
-          //console.log(err + " while creating database!");
+          console.log(err + " while creating database!");
           reject(err);
         }
-        //console.log("Crime data database created");
+        console.log("Crime data database created");
         that.con.changeUser({
           database: dbName
         }, function(err) {
           if (err) {
-            //console.log(err + " while changing database!");
+            console.log(err + " while changing database!");
             reject(err);
           }
-          //console.log("Swapping to crime_data database");
+          console.log("Swapping to crime_data database");
           resolve();
         });
       });
@@ -85,17 +86,16 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("CREATE TABLE IF NOT EXISTS " + tableName + " (type VARCHAR(255), year INT, lat DOUBLE, lng DOUBLE, id INT AUTO_INCREMENT PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)", function(err, result) {
         if (err) {
-          //console.log(err + " while creating table!");
+          console.log(err + " while creating table!");
           reject(err);
         }
-
-        //console.log("Crime data table created");
+        console.log("Crime data table created");
         that.con.query("CREATE TABLE IF NOT EXISTS " + favouritesTableName + " (userId VARCHAR(255) NOT NULL, airbnbId VARCHAR(255) NOT NULL, PRIMARY KEY(userId, airbnbId))", function(err, result) {
           if (err) {
-            //console.log(err + " while creating favourites table!");
+            console.log(err + " while creating favourites table!");
             reject(err);
           }
-          //console.log("favourites table created");
+          console.log("favourites table created");
           resolve();
         });
       });
@@ -104,17 +104,18 @@ class Db {
 
   loadTable(fileName, tableName, columns) {
     var that = this;
+    console.log("Load table", fileName, tableName, columns);
     return new Promise(function(resolve, reject) {
-      //console.log("Loading Crime data " +  fileName + " into table...");
-      // console.time("dataLoad");
+      console.log("Loading Crime data " +  fileName + " into table...");
+      console.time("dataLoad");
       that.con.query("LOAD DATA LOCAL INFILE '" + fileName + "' INTO TABLE " + tableName + " FIELDS TERMINATED BY ',' ENCLOSED BY '\"' " + columns , function(err, result) {
         if (err) {
-          //console.log(err + " while loading crime data into table!");
-          // console.timeEnd("dataLoad");
+          console.log(err + " while loading crime data into table!");
+          console.timeEnd("dataLoad");
           reject(err);
         } else {
-          //console.log("Crime data " +  fileName + " loaded into table");
-          // console.timeEnd("dataLoad");
+          console.log("Crime data " +  fileName + " loaded into table");
+          console.timeEnd("dataLoad");
           resolve();
         }
       });
@@ -126,15 +127,15 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("DROP TABLE IF EXISTS " + tableName, function(err, result) {
         if (err) {
-          //console.log(err + " while dropping table!");
+          console.log(err + " while dropping table!");
           reject(err);
         }
         that.con.query("DROP TABLE IF EXISTS " + favouritesTableName, function(err, result) {
           if (err) {
-            //console.log(err + " while loading table!");
+            console.log(err + " while loading table!");
             reject(err);
           }
-          //console.log("Cleared data tables");
+          console.log("Cleared data tables");
           resolve();
         });
       });
@@ -146,7 +147,7 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query("SELECT created_at FROM " + tableName + " LIMIT 1", function(err, result) {
         if (err) {
-          //console.log(err + " getting data from table!");
+          console.log(err + " getting data from table!");
           reject(err);
         }
         if (result.length == 0) {
@@ -169,7 +170,7 @@ class Db {
     return new Promise(function(resolve, reject) {
       that.con.query(queryString, params, function(err, result) {
         if (err) {
-          //console.log(err + " getting data from table!");
+          console.log(err + " getting data from table!");
           reject(err);
         }
         resolve(result);
@@ -179,17 +180,17 @@ class Db {
 
   getAllQuery(where) {
     var that = this;
-    var queryString = "SELECT * FROM " + tableName;
+    var queryString = "SELECT * FROM crime_data";
     if(where) {
       queryString += " WHERE " + where;
     }
     return new Promise(function(resolve, reject) {
       that.con.query(queryString,  function(err, result) {
         if (err) {
-          //console.log(err + " getting data from table!");
+          console.log(err + " getting data from table!");
           reject(err);
         }
-        //console.log("got results crime " + result)
+        // console.log("got results crime " + result)
         resolve(result);
       });
     });
