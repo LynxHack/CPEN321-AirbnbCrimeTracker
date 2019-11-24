@@ -17,7 +17,7 @@
         android:id="@+id/searchBar"
         android:layout_margin="16dp"
         app:mt_navIconEnabled="true"
-        app:mt_placeholder="Search"
+        app:mt_placeholder="Search Airbnb"
         android:elevation="5dp"
         android:outlineProvider="bounds"/>
 

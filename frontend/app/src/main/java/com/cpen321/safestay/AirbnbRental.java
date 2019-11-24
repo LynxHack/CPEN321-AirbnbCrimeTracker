@@ -1,6 +1,7 @@
 package com.cpen321.safestay;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 
 public class AirbnbRental {
 
@@ -12,9 +13,10 @@ public class AirbnbRental {
     private int capacity;
     private String url;
     private int safetyIndex;
+    private Marker marker;
 
 
-    AirbnbRental(Integer id, LatLng latLng, String name, double rating, int reviewCount, int capacity, String url, int safetyIndex) {
+    AirbnbRental(Integer id, LatLng latLng, String name, double rating, int reviewCount, int capacity, String url, int safetyIndex, Marker marker) {
         this.id = id;
         this.latLng = latLng;
         this.name = name;
@@ -23,6 +25,7 @@ public class AirbnbRental {
         this.capacity = capacity;
         this.url = url;
         this.safetyIndex = safetyIndex;
+        this.marker = marker;
     }
 
     public Integer getId() {
@@ -55,5 +58,9 @@ public class AirbnbRental {
 
     public int getSafetyIndex() {
         return safetyIndex;
+    }
+
+    public Marker getMarker() {
+        return marker;
     }
 }

@@ -28,6 +28,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -95,7 +99,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LatLng currentLocation;
 //    private final String listingURL = "http://192.168.1.72:3000/getListing/";
-    private final String listingURL = "http://52.12.72.93:3000/getListing/";
+    private final String listingURL = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
     private List<LatLng> markerList = new ArrayList<LatLng>();
@@ -105,6 +109,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean timerStarted;
     private String searchedCity = "";
     private BottomSheetDialog bottomSheet;
+    private FavouriteAirbnbs favouriteAirbnbs;
+
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +125,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // For user's current location
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         userLocation();
+
+        // Save user's Google account info
+        getGoogleAccountInfo();
 
         // Initialize Places.
         Places.initialize(getApplicationContext(), "AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE");
@@ -294,10 +304,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
 
-        /*mMap.addMarker(new MarkerOptions().position(currentLocation)
-                .title("You are here!")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)));*/
-
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -308,7 +314,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 AirbnbRental current = rentalMap.get(id);
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current.getLatLng(),
                         15f));
-                bottomSheet = new BottomSheetDialog(current);
+                bottomSheet = new BottomSheetDialog(current, favouriteAirbnbs, getApplicationContext());
                 bottomSheet.show(getSupportFragmentManager(), "test");
                 return false;
             }
@@ -347,10 +353,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             double rating = current.getDouble("star_rating");
                                             int reviewCount = current.getInt("reviews_count");
                                             int capacity = current.getInt("person_capacity");
-                                            String url = current.getString("picture");
+                                            String url = current.getJSONObject("picture").getString("picture");
                                             int safety_index = current.getInt("safetyIndex");
-
-                                            AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index);
 
                                             float markerColour;
 
@@ -364,6 +368,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                                     .title("this is a marker")
                                                     .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
                                             marker.setTag(id);
+
+                                            AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index, marker);
 
                                             rentalMap.put(id, rental);
                                         }
@@ -488,6 +494,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
+    }
+
+    private void getGoogleAccountInfo() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(MapsActivity.this);
+
+        userId = account.getId();
+        favouriteAirbnbs = new FavouriteAirbnbs(userId, getApplicationContext());
+
+        Toast.makeText(getApplicationContext(), userId, Toast.LENGTH_SHORT).show();
+        System.out.println(userId);
     }
 
     @Override
