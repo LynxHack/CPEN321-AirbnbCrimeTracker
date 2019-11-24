@@ -7,7 +7,6 @@ var dbName = "crime_data";
 var tableName = "crime_data";
 var fileName = "crimedata_csv_all_years.csv";
 var favouritesTableName = "userFavourites";
-const clear = false;
 
 var dbConfig = {
   host: "localhost",
@@ -37,7 +36,7 @@ class Db {
     });
   }
 
-  initializeDb() {
+  initializeDb(clear) {
     var that = this;
     return that.connectToDb()
                 .then((value) => {

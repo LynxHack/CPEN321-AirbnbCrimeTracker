@@ -44,7 +44,18 @@ describe('Testing dbs initializeDatabase()', () => {
     mysql.createConnection.mockReturnValue(sqlCon);
 
     expect.assertions(1);
-    await expect(db.initializeDb()).resolves.toEqual(undefined);
+    await expect(db.initializeDb(false)).resolves.toEqual(undefined);
+  });
+
+  it('Db initialized successfully and cleared tables', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, func) => {func()},
+                changeUser: (dbName, func) => {func()}  };
+    mysql.createConnection.mockReturnValue(sqlCon);
+
+    expect.assertions(1);
+    await expect(db.initializeDb(true)).resolves.toEqual(undefined);
   });
 
   it('Db connection failed', async () => {
@@ -55,7 +66,7 @@ describe('Testing dbs initializeDatabase()', () => {
     mysql.createConnection.mockReturnValue(sqlCon);
 
     expect.assertions(1);
-    await expect(db.initializeDb()).rejects.toMatch("Connection failed");
+    await expect(db.initializeDb(false)).rejects.toMatch("Connection failed");
   });
 
   it('Db creation failed', async () => {
@@ -70,7 +81,7 @@ describe('Testing dbs initializeDatabase()', () => {
     mysql.createConnection.mockReturnValue(sqlCon);
 
     expect.assertions(1);
-    await expect(db.initializeDb()).rejects.toMatch("Error creating Db!");
+    await expect(db.initializeDb(false)).rejects.toMatch("Error creating Db!");
   });
 
   it('Switching db failed', async () => {
@@ -81,7 +92,7 @@ describe('Testing dbs initializeDatabase()', () => {
     mysql.createConnection.mockReturnValue(sqlCon);
 
     expect.assertions(1);
-    await expect(db.initializeDb()).rejects.toMatch("Error changing database!");
+    await expect(db.initializeDb(false)).rejects.toMatch("Error changing database!");
   });
 
   it('Table creation failed', async () => {
@@ -96,7 +107,22 @@ describe('Testing dbs initializeDatabase()', () => {
     mysql.createConnection.mockReturnValue(sqlCon);
 
     expect.assertions(1);
-    await expect(db.initializeDb()).rejects.toMatch("Error creating Table!");
+    await expect(db.initializeDb(false)).rejects.toMatch("Error creating Table!");
+  });
+
+  it('UserFavourites Table creation failed', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, func) => {if(qString.includes("userFavourites")) {
+                                              func("Error creating Table!");
+                                            } else {
+                                              func();
+                                            }},
+                changeUser: (dbName, func) => {func()}  };
+    mysql.createConnection.mockReturnValue(sqlCon);
+
+    expect.assertions(1);
+    await expect(db.initializeDb(false)).rejects.toMatch("Error creating Table!");
   });
 })
 
@@ -170,7 +196,7 @@ describe('Testing dbs loadTable()', () => {
     await db.connectToDb();
 
     expect.assertions(1);
-    await expect(db.loadTable()).resolves.toEqual(undefined);
+    await expect(db.loadTable("fileName", "tableName", "columns")).resolves.toEqual(undefined);
   });
 
   it('Table loading failed', async () => {
@@ -181,7 +207,7 @@ describe('Testing dbs loadTable()', () => {
     await db.connectToDb();
 
     expect.assertions(1);
-    await expect(db.loadTable()).rejects.toMatch("Load Data failed!");
+    await expect(db.loadTable("fileName", "tableName", "columns")).rejects.toMatch("Load Data failed!");
   });
 })
 
@@ -201,6 +227,21 @@ describe('Testing dbs clearTable()', () => {
     sqlCon = { connect: (func) => {func()},
                 on: (type, func) => {},
                 query: (qString, func) => {func("Clear table failed!")} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.clearTable()).rejects.toMatch("Clear table failed!");
+  });
+
+  it('Table clear failed', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, func) => {if(qString.includes("userFavourites")) {
+                                                func("Clear table failed!")
+                                              } else {
+                                                func();
+                                              } }};
     mysql.createConnection.mockReturnValue(sqlCon);
     await db.connectToDb();
 
@@ -241,7 +282,7 @@ describe('Testing dbs checkLastUpdate()', () => {
     await db.connectToDb();
 
     expect.assertions(1);
-    await expect(db.checkLastUpdate()).rejects.toMatch("No results found");
+    await expect(db.checkLastUpdate()).resolves.toEqual();
   });
 })
 
@@ -261,7 +302,7 @@ describe('Testing dbs sendQuery()', () => {
     expect.assertions(3);
     await expect(db.sendQuery(0, 10, 0, 10)).resolves.toEqual(returnObj);
     expect(queryString).toEqual(expect.not.stringContaining("AND year >="));
-    expect(queryString).toEqual(expect.stringContaining("SELECT type, year, x, y FROM"));
+    expect(queryString).toEqual(expect.stringContaining("SELECT * FROM"));
   });
 
   it('sendQuery success with year', async () => {
@@ -279,7 +320,7 @@ describe('Testing dbs sendQuery()', () => {
     expect.assertions(3);
     await expect(db.sendQuery(0, 10, 0, 10, 1997)).resolves.toEqual(returnObj);
     expect(queryString).toEqual(expect.stringContaining("AND year >="));
-    expect(queryString).toEqual(expect.stringContaining("SELECT type, year, x, y FROM"));
+    expect(queryString).toEqual(expect.stringContaining("SELECT * FROM"));
   });
 
   it('sendQuery failed', async () => {
@@ -309,6 +350,22 @@ describe('Testing dbs getAllQuery()', () => {
     await expect(db.getAllQuery()).resolves.toEqual(returnObj);
   });
 
+  it('getAllQuery success with where clause', async () => {
+    var returnObj = "Query Success";
+    var q = null;
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, func) => {
+                          q = qString;
+                          func(null, returnObj)} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(2);
+    await expect(db.getAllQuery("x > 10")).resolves.toEqual(returnObj);
+    expect(q).toMatch("WHERE x > 10")
+  });
+
   it('getAllQuery failed', async () => {
     sqlCon = { connect: (func) => {func()},
                 on: (type, func) => {},
@@ -318,5 +375,89 @@ describe('Testing dbs getAllQuery()', () => {
 
     expect.assertions(1);
     await expect(db.getAllQuery()).rejects.toMatch("Query failed!");
+  });
+})
+
+describe('Testing dbs addFavourite(userId, airbnbId))', () => {
+  it('addFavourite loaded successfully', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func()} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.addFavourite(1, 12)).resolves.toEqual(undefined);
+  });
+
+  it('addFavourite failed', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func("Query Data failed!")} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.addFavourite(1, 12)).rejects.toMatch("Query Data failed!");
+  });
+})
+
+describe('Testing dbs deleteFavourite(userId, airbnbId)', () => {
+  it('addFavourite loaded successfully', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func()} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.deleteFavourite(1, 12)).resolves.toEqual(undefined);
+  });
+
+  it('addFavourite failed', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func("Delete Data failed!")} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.deleteFavourite(1, 12)).rejects.toMatch("Delete Data failed!");
+  });
+})
+
+describe('Testing dbs getFavourites(userId)', () => {
+  it('getFavourites loaded successfully', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func(null, [])} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.getFavourites(1, 12)).resolves.toEqual([]);
+  });
+
+  it('getFavourites loaded successfully with results', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func(null, [{airbnbId:"1"}, {airbnbId:"2"}])} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.getFavourites(1, 12)).resolves.toEqual(["1","2"]);
+  });
+
+
+  it('getFavourites failed', async () => {
+    sqlCon = { connect: (func) => {func()},
+                on: (type, func) => {},
+                query: (qString, params, func) => {func("Query Data failed!")} };
+    mysql.createConnection.mockReturnValue(sqlCon);
+    await db.connectToDb();
+
+    expect.assertions(1);
+    await expect(db.getFavourites(1, 12)).rejects.toMatch("Query Data failed!");
   });
 })

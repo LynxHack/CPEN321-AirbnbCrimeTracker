@@ -11,6 +11,7 @@ const EPOCH_MIN = EPOCH_SEC * 60;
 const EPOCH_HOUR = EPOCH_MIN * 60;
 const EPOCH_DAY = EPOCH_HOUR * 24;
 const EPOCH_WEEK = EPOCH_DAY * 7;
+const clear = true;
 
 const crimeSeverity = {
 // Vancouver
@@ -106,7 +107,7 @@ class CrimeDataService {
     var that = this;
 
     return new Promise(function(resolve, reject) {
-      db.initializeDb()
+      db.initializeDb(clear)
         .then((result) => db.checkLastUpdate())
         .then((result) => {
           if (!result) {
@@ -269,11 +270,11 @@ class CrimeDataService {
       console.log("Converting COV file to use latitude longitude...")
       readStream.pipe(csv.parse({ columns: true }))
       .pipe(csv.transform(function(data) {
-          if(typeof(data['X']) != 'X') {
+          if(typeof(data['X']) != 'number') {
             let x = data['X'];
             let y = data['Y'];
             var latlon = new Array(2)
-            latlongToUTM.UTMXYToLatLon(x, y, latlon)
+            latlongToUTM(x, y, latlon)
             data['X'] = latlon[0];
             data['Y'] = latlon[1];
           }
@@ -281,7 +282,7 @@ class CrimeDataService {
       }))
       .pipe(csv.stringify())
       .pipe(writeStream);
-      
+
       writeStream.on('finish', () => {
         console.log("Finished conversion");
         resolve()

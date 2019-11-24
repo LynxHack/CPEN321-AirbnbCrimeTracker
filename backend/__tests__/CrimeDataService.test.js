@@ -2,17 +2,23 @@ const db = require("../dbs");
 const fs = require("fs");
 const http = require("http");
 const zip = require("adm-zip");
+const csv = require("csv");
 var crimeDataService = require("../CrimeDataService");
+
 jest.mock("../dbs");
 jest.mock('fs');
 jest.mock('http');
 jest.mock('adm-zip');
-
+jest.mock('csv');
 
 
 describe('Testing Crime Data Service initializeCrimeDataSet()', () => {
   beforeEach(() => {
     fs.createWriteStream.mockReturnValue({on: (type, callback) => {setTimeout(3000, callback())}});
+    var readStream = { pipe: () => {return readStream} };
+    fs.createReadStream.mockReturnValue(readStream);
+    csv.transform.mockReturnValue((callback) => callback());
+    csv.stringify.mockReturnValue((callback) => callback());
     zip.mockImplementation(() => { return { extractEntryTo: () => {} }});
     db.loadTable.mockReturnValue(new Promise(function(resolve, reject) {resolve()}));
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve([])}));
@@ -79,31 +85,31 @@ describe('Testing Crime Data Service between(x, min, max)', () => {
 
 describe('Testing Crime Data Service getIndex(lat, lng)', () => {
   it('Test valid between', () => {
-    expect(crimeDataService.getIndex(-123.1, 49.2)).toStrictEqual([68,4]);
+    expect(crimeDataService.getIndex(49.2, -123.1)).toStrictEqual([68,4]);
   });
 
   it('Test middle left vancouver bound', () => {
-    expect(crimeDataService.getIndex(-123.2, 49.2)).toStrictEqual([27,4]);
+    expect(crimeDataService.getIndex(49.2, -123.2)).toStrictEqual([27,4]);
   });
 
   it('Test bottom left vancouver bound', () => {
-    expect(crimeDataService.getIndex(-123.27, 49.195)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(49.195, -123.27)).toStrictEqual([0,0]);
   });
 
   it('Test upper right corner vancouver boundary', () => {
-    expect(crimeDataService.getIndex(-123.02, 49.315)).toStrictEqual([100,99]);
+    expect(crimeDataService.getIndex(49.315, -123.02)).toStrictEqual([100,99]);
   });
 
   it('Test bottom right vancouver boundary', () => {
-    expect(crimeDataService.getIndex(-123.27, 49.315)).toStrictEqual([0,99]);
+    expect(crimeDataService.getIndex(49.315, -123.27)).toStrictEqual([0,99]);
   });
 
   it('Test upper left vancouver bound', () => {
-    expect(crimeDataService.getIndex(-123.02, 49.195)).toStrictEqual([100,0]);
+    expect(crimeDataService.getIndex(49.195, -123.02)).toStrictEqual([100,0]);
   });
 
   it('Test middle of vancouver', () => {
-    expect(crimeDataService.getIndex(-123.15, 49.25)).toStrictEqual([47,45]);
+    expect(crimeDataService.getIndex(49.25, -123.15)).toStrictEqual([47,45]);
   });
 
   it('Test out of bound over limit', () => {
@@ -119,79 +125,82 @@ describe('Testing Crime Data Service getIndex(lat, lng)', () => {
   });
 
   it('Test below lng, valid lng', () => {
-    expect(crimeDataService.getIndex(-124, 49.2)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(49.2, -124)).toStrictEqual([0,0]);
   });
 
   it('Test below lng, above lat', () => {
-    expect(crimeDataService.getIndex(-124, 52)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(52, -124)).toStrictEqual([0,0]);
   });
 
   it('Test above lng, below lat', () => {
-    expect(crimeDataService.getIndex(-122, 45)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(45, -122)).toStrictEqual([0,0]);
   });
 
   it('Test above lng, valid lng', () => {
-    expect(crimeDataService.getIndex(-122, 49.2)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(49.2, -122)).toStrictEqual([0,0]);
   });
 
   it('Test below lat, valid lng', () => {
-    expect(crimeDataService.getIndex(-123.1, 49)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(49, -123.1)).toStrictEqual([0,0]);
   });
 
   it('Test below lat, above lng', () => {
-    expect(crimeDataService.getIndex(-120.1, 49)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(49, -120.1)).toStrictEqual([0,0]);
   });
 
   it('Test above lat, below lng', () => {
-    expect(crimeDataService.getIndex(-124, 50)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(50, -124)).toStrictEqual([0,0]);
   });
 
   it('Test above lat, valid lng', () => {
-    expect(crimeDataService.getIndex(-123.1, 50)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(50, -123.1)).toStrictEqual([0,0]);
   });
 
   it('Test both above', () => {
-    expect(crimeDataService.getIndex(-124, 50)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(50, -124)).toStrictEqual([0,0]);
   });
 
   it('Test both below', () => {
-    expect(crimeDataService.getIndex(-120, 45)).toStrictEqual([0,0]);
+    expect(crimeDataService.getIndex(45, -120)).toStrictEqual([0,0]);
   });
 })
 
 describe('Testing Crime Data Service getCrimeRate(lat, lng)', () => {
   it('valid index, no crimes', async () => {
-    expect(crimeDataService.getCrimeRate(-123.1, 49.3)).toBe(10);
+    db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve(new Array())}));
+    expect.assertions(2);
+    await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
+    expect(crimeDataService.getCrimeRate(49.3, -123.1)).toBe(10);
   });
 
   it('valid index, 10', async () => {
     var aboveIndex = new Array(2005);
-    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,x:498084,y:5450650});
+    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,lng:-123.02630548,lat:49.20863951});
 
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve(aboveIndex)}));
     expect.assertions(2);
     await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
-    expect(crimeDataService.getCrimeRate(-123.02630548, 49.20863951)).toBe(0)
+    expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(0)
   });
 
   it('valid index, 9', async () => {
     var aboveIndex = new Array(5);
-    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,x:498084,y:5450650});
+    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,lng:-123.02630548,lat:49.20863951});
 
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve(aboveIndex)}));
     expect.assertions(2);
     await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
-    expect(crimeDataService.getCrimeRate(-123.02630548, 49.20863951)).toBe(9)
+    expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(9)
   });
 
   it('valid index, 5', async () => {
     var aboveIndex = new Array(1000);
-    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,x:498084,y:5450650});
+    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,lng:-123.02630548,lat:49.20863951});
 
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve(aboveIndex)}));
     expect.assertions(2);
     await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
-    expect(crimeDataService.getCrimeRate(-123.02630548, 49.20863951)).toBe(5)
+    expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(5)
   });
 
 
@@ -238,7 +247,7 @@ describe('Testing Crime Data Service getCrimeRate(lat, lng)', () => {
 
 describe('Testing Crime Data Service updateCrimeSafety()', () => {
   beforeEach(() => {
-    db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve([{"type":"Break and Enter Residential/Other","year":2005,"x":498084,"y":5450650},{"type":"Break and Enter Residential/Other","year":2003,"x":498282,"y":5450220},{"type":"Mischief","year":2014,"x":497915,"y":5450780}])}));
+    db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve([{"type":"Break and Enter Residential/Other","year":2005,"lng":-123.02630548,"lat":49.20863951},{"type":"Break and Enter Residential/Other","year":2003,"lng":-123.22630548,"lat":49.22863951},{"type":"Mischief","year":2014,"lng":-123.32630548,"lat":49.23863951}])}));
   });
 
   it('Crime safety updated successfully', async () => {
@@ -255,12 +264,12 @@ describe('Testing Crime Data Service updateCrimeSafety()', () => {
 
   it('Update crime safety with > 2000 crimes', async () => {
     var aboveIndex = new Array(2005);
-    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,x:498084,y:5450650});
+    aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,lng:-123.02630548,lat:49.20863951});
 
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve(aboveIndex)}));
     expect.assertions(2);
     await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
-    expect(crimeDataService.getCrimeRate(-123.02630548, 49.20863951)).toBe(0)
+    expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(0)
   });
 })
 
@@ -274,6 +283,10 @@ describe('Testing Crime Data Service getCrimeData(xmin, xmax, ymin, ymax, year)'
 describe('Testing Crime Data Service updateCrimeDataSet()', () => {
   beforeEach(() => {
     fs.createWriteStream.mockReturnValue({on: (type, callback) => {setTimeout(3000, callback())}});
+    var readStream = { pipe: () => {return readStream} };
+    fs.createReadStream.mockReturnValue(readStream);
+    csv.transform.mockReturnValue((callback) => callback());
+    csv.stringify.mockReturnValue((callback) => callback());
     zip.mockImplementation(() => { return { extractEntryTo: () => {} }});
     db.loadTable.mockReturnValue(new Promise(function(resolve, reject) {resolve()}));
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve([])}));
@@ -293,18 +306,6 @@ describe('Testing Crime Data Service updateCrimeDataSet()', () => {
     return await expect(crimeDataService.updateCrimeDataSet()).resolves.toEqual(undefined);
   });
 
-  it('Unzip file failed', async () => {
-    zip.mockImplementation(() => { throw "Invalid filename" });
-    expect.assertions(1);
-    return await expect(crimeDataService.updateCrimeDataSet()).rejects.toMatch("Invalid filename");
-  });
-
-  it('Db load table failed', async () => {
-    db.loadTable.mockReturnValue(new Promise(function(resolve, reject) { reject("DB Connection failed") }));
-    expect.assertions(1);
-    return await expect(crimeDataService.updateCrimeDataSet()).rejects.toMatch("DB Connection failed" );
-  });
-
   it('Update crime safety failed', async () => {
     db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) { reject("DB Connection failed") }));
     expect.assertions(1);
@@ -317,6 +318,83 @@ describe('Testing Crime Data Service updateCrimeDataSet()', () => {
     http.get.mockReturnValue(getMockReturn);
     expect.assertions(1);
     return await expect(crimeDataService.updateCrimeDataSet()).rejects.toMatch("Request failed");
+  });
+})
+
+describe('Testing Crime Data Service updateVancouverDataSet()', () => {
+  beforeEach(() => {
+    fs.createWriteStream.mockReturnValue({on: (type, callback) => {setTimeout(3000, callback())}});
+    var readStream = { pipe: () => {return readStream} };
+    fs.createReadStream.mockReturnValue(readStream);
+    csv.transform.mockReturnValue((callback) => callback());
+    csv.stringify.mockReturnValue((callback) => callback());
+    zip.mockImplementation(() => { return { extractEntryTo: () => {} }});
+    db.loadTable.mockReturnValue(new Promise(function(resolve, reject) {resolve()}));
+    db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve([])}));
+    var getMockReturn = {};
+    getMockReturn.on = (type, callback) => {
+                          if (type == "response") {
+                            callback({ pipe: (output) => { output.val = "Request response" }});
+                            return this;
+                          } else {
+                            return this;
+                          }};
+    http.get.mockReturnValue(getMockReturn);
+  });
+
+  it('VancouverDataset updated successfully', async () => {
+    expect.assertions(1);
+    return await expect(crimeDataService.updateVancouverDataSet()).resolves.toEqual(undefined);
+  });
+
+  it('Request failed', async () => {
+    var getMockReturn = {};
+    getMockReturn.on = (type, callback) => {throw "Request failed"};
+    http.get.mockReturnValue(getMockReturn);
+    expect.assertions(1);
+    return await expect(crimeDataService.updateVancouverDataSet()).rejects.toMatch("Request failed");
+  });
+})
+
+describe('Testing Crime Data Service updateChicagoDataSet()', () => {
+  beforeEach(() => {
+    fs.createWriteStream.mockReturnValue({on: (type, callback) => {setTimeout(3000, callback())}});
+    var readStream = { pipe: () => {return readStream} };
+    fs.createReadStream.mockReturnValue(readStream);
+    csv.transform.mockReturnValue((callback) => callback());
+    csv.stringify.mockReturnValue((callback) => callback());
+    zip.mockImplementation(() => { return { extractEntryTo: () => {} }});
+    db.loadTable.mockReturnValue(new Promise(function(resolve, reject) {resolve()}));
+    db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve([])}));
+    var getMockReturn = {};
+    getMockReturn.on = (type, callback) => {
+                          if (type == "response") {
+                            callback({ pipe: (output) => { output.val = "Request response" }});
+                            return this;
+                          } else {
+                            return this;
+                          }};
+    http.get.mockReturnValue(getMockReturn);
+  });
+
+  it('ChicagoDataset updated successfully', async () => {
+    expect.assertions(1);
+    return await expect(crimeDataService.updateChicagoDataSet()).resolves.toEqual(undefined);
+  });
+
+  it('ChicagoDataset updated unsuccessfully', async () => {
+    db.loadTable.mockReturnValue(new Promise(function(resolve, reject) {reject("Load Table Failed!")}));
+    expect.assertions(1);
+    return await expect(crimeDataService.updateChicagoDataSet()).rejects.toMatch("Load Table Failed!");
+  });
+
+  it('Request failed', async () => {
+    var getMockReturn = {};
+    getMockReturn.on = (type, callback) => {throw "Request failed"};
+    http.get.mockReturnValue(getMockReturn);
+    fs.createWriteStream.mockReturnValue({on: (type, callback) => {}});
+    expect.assertions(1);
+    return await expect(crimeDataService.updateChicagoDataSet()).rejects.toMatch("Request failed");
   });
 })
 
@@ -380,5 +458,36 @@ describe('Testing Crime Data Service unzipFile()', () => {
     zip.mockImplementation(() => { return { extractEntryTo: () => { throw "Unzip failed" }} });
     expect.assertions(1);
     return await expect(crimeDataService.unzipFile()).rejects.toMatch("Unzip failed");
+  });
+})
+
+describe('Testing Crime Data Service mapCoordinates()', () => {
+  beforeEach(() => {
+    fs.createWriteStream.mockReturnValue({on: (type, callback) => {setTimeout(3000, callback())}});
+    var readStream = { pipe: (callback) => {
+                                          if (typeof(callback) == "function") {
+                                            callback();
+                                          }
+                                          return readStream} };
+    fs.createReadStream.mockReturnValue(readStream);
+    csv.transform.mockImplementation((callback) => callback({}));
+    csv.stringify.mockReturnValue(() => {});
+  });
+
+  it('mapCoordinates success', async () => {
+    expect.assertions(1);
+    return await expect(crimeDataService.mapCoordinates()).resolves.toEqual(undefined);
+  });
+
+  it('mapCoordinates success, transformed data', async () => {
+    csv.transform.mockImplementation((callback) => callback({X:498084,Y:5450650}));
+    expect.assertions(1);
+    return await expect(crimeDataService.mapCoordinates()).resolves.toEqual(undefined);
+  });
+
+  it('mapCoordinates success, no transformed data', async () => {
+    csv.transform.mockImplementation((callback) => callback({X:"X",Y:"Y"}));
+    expect.assertions(1);
+    return await expect(crimeDataService.mapCoordinates()).resolves.toEqual(undefined);
   });
 })

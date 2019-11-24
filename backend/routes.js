@@ -69,9 +69,10 @@ router.put("/favourites", (req, res) => {
   var airbnbId = req.body.airbnbId;
     if (!userId || !airbnbId) {
       res.status(400).send("Invalid params");
+      return;
     }
 
-    userService.addFavourite(userId, airbnbId)
+    return userService.addFavourite(userId, airbnbId)
     .then(res.status(200).end())
     .catch((error) => {
       res.status(500).send("Error while adding airbnb to favourites!");
@@ -83,9 +84,10 @@ router.delete("/favourites", (req, res) => {
   var airbnbId = req.query["airbnbId"];
     if (!userId || !airbnbId) {
       res.status(400).send("Invalid params");
+      return;
     }
 
-    userService.deleteFavourite(userId, airbnbId)
+    return userService.deleteFavourite(userId, airbnbId)
     .then(res.status(200).end())
     .catch((error) => {
       res.status(500).send("Error while removing airbnb from favourites!");
@@ -96,19 +98,20 @@ router.get("/favourites", (req, res) => {
   var userId = req.query["userId"];
     if (!userId) {
       res.status(400).send("Invalid params");
+      return;
     }
 
-    userService.getFavourites(userId)
+    return userService.getFavourites(userId)
     .then((result) => res.status(200).send(JSON.stringify(result)))
     .catch((error) => {
       res.status(500).send("Error while getting airbnbs from favourites!");
     });
 });
 
-// Look under listings for airbnb posts
-router.get("/crimes", async (req, res) => {
-    crimeDataService.getCrimeData(req.query.xmin, req.query.xmax, req.query.ymin, req.query.ymax, req.query.year)
-                    .then((result) => res.status(200).send(JSON.stringify(result)));
-});
+// // Look under listings for airbnb posts
+// router.get("/crimes", async (req, res) => {
+//     crimeDataService.getCrimeData(req.query.xmin, req.query.xmax, req.query.ymin, req.query.ymax, req.query.year)
+//                     .then((result) => res.status(200).send(JSON.stringify(result)));
+// });
 
 module.exports = router;
