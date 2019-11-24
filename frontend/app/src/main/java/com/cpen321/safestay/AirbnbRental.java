@@ -14,9 +14,12 @@ public class AirbnbRental {
     private String url;
     private int safetyIndex;
     private Marker marker;
+    private int price;
 
 
-    AirbnbRental(Integer id, LatLng latLng, String name, double rating, int reviewCount, int capacity, String url, int safetyIndex, Marker marker) {
+    AirbnbRental(Integer id, LatLng latLng, String name, double rating, int reviewCount,
+                 int capacity, String url, int safetyIndex, Marker marker,
+                    int price) {
         this.id = id;
         this.latLng = latLng;
         this.name = name;
@@ -26,6 +29,7 @@ public class AirbnbRental {
         this.url = url;
         this.safetyIndex = safetyIndex;
         this.marker = marker;
+        this.price = price;
     }
 
     public Integer getId() {
@@ -63,4 +67,6 @@ public class AirbnbRental {
     public Marker getMarker() {
         return marker;
     }
+
+    public int getPrice(){return price;}
 }
