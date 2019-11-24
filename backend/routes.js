@@ -21,19 +21,40 @@ const reverse = require("reverse-geocode"); // For future cities
 router.get("/getListing", (req, res) => {
   var xrange = [Number(req.query["xmin"]), Number(req.query["xmax"])];
   var yrange = [Number(req.query["ymin"]), Number(req.query["ymax"])];
+  var startdate = req.query["startdate"];
+  var enddate = req.query["enddate"];
+  var minprice = Number(req.query["minprice"]);
+  var maxprice = Number(req.query["maxprice"]);
   var coord = [(yrange[0] + yrange[1])/2,(xrange[0] + xrange[1])/2];
   var mainquery = reverse.lookup(coord[0], coord[1], "ca").city.split(" ")[0];
   mainquery = 'Vancouver';
-  // console.log(mainquery);
-  return axios.get(`http://localhost:${pythonport}/${mainquery}`).then((result) => {
+  return axios.get(`http://localhost:${pythonport}/airbnb`, {
+    params:{
+      location: mainquery,
+      startdate: startdate,
+      enddate: enddate
+    }
+  }).then((result) => {
     var pruned = result.data.explore_tabs[0].sections.pop();
-    pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {return x.listing;});
+    pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {
+      x.listing['pricing_quote'] = x.pricing_quote;
+      return x.listing;
+    });
     pruned = pruned.map((listing) => {
-                  return (({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture}) =>
-                            ({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture}))(listing);
+                  return (({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture, pricing_quote}) =>
+                            ({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture, pricing_quote}))(listing);
                   });
-    // Size of radius to check for crimes
+
+    // Filter by price
+    if(minprice || maxprice){
+      minprice = minprice ? minprice : 0;
+      maxprice = maxprice ? maxprice : Number.MAX_SAFE_INTEGER;
+      pruned = pruned.filter((x) => {return x.pricing_quote.rate.amount >= minprice && x.pricing_quote.rate.amount <= maxprice});
+    }
+
     // console.log(pruned);
+    
+    // Size of radius to check for crimes
     for(let listing of pruned){
       listing.safetyIndex = crimeDataService.getCrimeRate(listing.lat, listing.lng);
     }
