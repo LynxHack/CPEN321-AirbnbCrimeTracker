@@ -11,7 +11,7 @@ const EPOCH_MIN = EPOCH_SEC * 60;
 const EPOCH_HOUR = EPOCH_MIN * 60;
 const EPOCH_DAY = EPOCH_HOUR * 24;
 const EPOCH_WEEK = EPOCH_DAY * 7;
-const clear = true;
+const clear = false;
 
 const crimeSeverity = {
 // Vancouver
