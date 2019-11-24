@@ -3,6 +3,10 @@ package com.cpen321.safestay;
 import android.content.Context;
 
 import androidx.test.espresso.IdlingPolicies;
+import androidx.test.espresso.action.GeneralLocation;
+import androidx.test.espresso.action.GeneralSwipeAction;
+import androidx.test.espresso.action.Press;
+import androidx.test.espresso.action.Swipe;
 import androidx.test.espresso.action.ViewActions;
 import androidx.test.espresso.core.internal.deps.guava.collect.Maps;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -77,5 +81,65 @@ public class ExampleInstrumentedTest {
         } catch (Exception e) {
             System.out.println(e.toString());
         }
+    }
+
+    @Test
+    public void airbnbInformationDisplayed() {
+
+        onView(withId(R.id.map))
+                .perform(ViewActions.swipeLeft())
+                .check(matches(isDisplayed()));
+
+        UiDevice device = UiDevice.getInstance(getInstrumentation());
+        UiObject marker = device.findObject(new UiSelector().descriptionContains("this is a marker"));
+        try {
+            marker.click();
+            marker.click();
+            marker.click();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+
+        onView(withId(R.id.bottomSheet))
+                .check(matches(isDisplayed()));
+
+        onView(withId(R.id.airbnb_image))
+                .check(matches(isDisplayed()));
+
+        onView(withId(R.id.sheet_title))
+                .check(matches(isDisplayed()));
+
+        onView(withId(R.id.room_capacity))
+                .check(matches(isDisplayed()));
+
+        onView(withId(R.id.rating))
+                .check(matches(isDisplayed()));
+
+        /*onView(withId(R.id.num_reviews))
+                .check(matches(isDisplayed()));*/
+    }
+
+    @Test
+    public void bookAirbnb() {
+
+        onView(withId(R.id.map))
+                .perform(ViewActions.swipeLeft())
+                .check(matches(isDisplayed()));
+
+        UiDevice device = UiDevice.getInstance(getInstrumentation());
+        UiObject marker = device.findObject(new UiSelector().descriptionContains("this is a marker"));
+        try {
+            marker.click();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+
+        onView(withId(R.id.bottomSheet))
+                .check(matches(isDisplayed()))
+                .perform(new GeneralSwipeAction(Swipe.FAST, GeneralLocation.CENTER, GeneralLocation.TOP_CENTER, Press.FINGER));
+
+        onView(withId(R.id.book))
+                .check(matches(isDisplayed()))
+                .perform(click());
     }
 }

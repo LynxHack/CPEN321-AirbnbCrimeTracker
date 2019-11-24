@@ -43,7 +43,7 @@
         android:layout_marginTop="2dp"
         />
 
-    <TextView
+    <!--TextView
         android:id="@+id/rating"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -51,7 +51,20 @@
         android:layout_gravity="left"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
-        />
+        /-->
+
+    <RatingBar
+        android:id="@+id/rating"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        style="?android:attr/ratingBarStyle"
+        android:progressTint="@color/airbnbRed"
+        android:numStars="5"
+        android:stepSize="0.1"
+        android:isIndicator="true" />
 
     <TextView
         android:id="@+id/num_reviews"
@@ -64,30 +77,40 @@
         android:layout_marginBottom="5dp"
         />
 
-    <Button
-        android:id="@+id/favourite"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="left"
-        android:background="@drawable/toggle_on"
-        android:textColor="@color/airbnbRed"
-        android:layout_marginBottom="5dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        />
+        android:layout_gravity="left">
 
-    <Button
-        android:id="@+id/book"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left"
-        android:background="@drawable/book_button"
-        android:textColor="@color/white"
-        android:text="Book Room"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginBottom="16dp"
-        style="?android:attr/borderlessButtonStyle"
-        />
+        <Button
+            android:id="@+id/favourite"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="5dp"
+            android:layout_weight="1"
+            style="?android:attr/borderlessButtonStyle"
+            android:background="@drawable/favourite_toggle"
+            android:paddingLeft="15dp"
+            android:drawableLeft="@drawable/ic_star_favourite"
+            android:text="Favourite"
+            android:textColor="@color/airbnbRed" />
+
+        <Button
+            android:id="@+id/book"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_weight="1"
+            android:background="@drawable/book_button"
+            android:text="Book Room"
+            android:textColor="@color/white" />
+    </LinearLayout>
 
 </LinearLayout>

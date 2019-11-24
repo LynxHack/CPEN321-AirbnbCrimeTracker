@@ -14,9 +14,5 @@
         </shape>
     </item>
     <item
-        android:drawable="@drawable/ic_star_favourite"/>
-        android:bottom="20dp"
-        android:left="20dp"
-        android:right="20dp"
-        android:top="20dp"/>
+        android:drawable="@drawable/ic_star_favourite" />
 </layer-list>

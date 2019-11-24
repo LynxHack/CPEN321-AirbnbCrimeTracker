@@ -1,8 +1,12 @@
 package com.cpen321.safestay;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,10 +14,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.squareup.picasso.Picasso;
 
@@ -23,9 +30,13 @@ import androidx.annotation.Nullable;
 public class BottomSheetDialog extends BottomSheetDialogFragment {
 
     private AirbnbRental rental;
+    private FavouriteAirbnbs favouriteAirbnbs;
+    private Context parentContext;
 
-    BottomSheetDialog(AirbnbRental rental) {
+    BottomSheetDialog(AirbnbRental rental, FavouriteAirbnbs favouriteAirbnbs, Context parentContext) {
         this.rental = rental;
+        this.favouriteAirbnbs = favouriteAirbnbs;
+        this.parentContext = parentContext;
     }
 
     @Nullable
@@ -54,8 +65,8 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
         TextView capacity = v.findViewById(R.id.room_capacity);
         capacity.setText("Capacity: " + rental.getCapacity() + " Occupants");
 
-        TextView rating = v.findViewById(R.id.rating);
-        rating.setText(rental.getRating() + " Stars");
+        RatingBar rating = v.findViewById(R.id.rating);
+        rating.setRating((float) rental.getRating());
 
         TextView numReviews = v.findViewById(R.id.num_reviews);
         numReviews.setText(rental.getReviewCount() + " Reviews");
@@ -80,7 +91,44 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
     @Override
     public void onCancel(DialogInterface dialog) {
         // Toast doesn't appear but this works - Replace with favourite logic
-        Toast.makeText(getContext(), "Works!", Toast.LENGTH_SHORT);
+        Integer rentalId = rental.getId();
+        if (!favouriteAirbnbs.isFavourite(rentalId)) {
+            favouriteAirbnbs.addFavourite(rentalId, this.getContext());
+
+            Drawable drawable = getResources().getDrawable(R.drawable.ic_star_favourite);
+            BitmapDescriptor icon = getMarkerIconFromDrawable(drawable);
+
+            rental.getMarker().setIcon(icon);
+        }
+        else if (favouriteAirbnbs.isFavourite(rentalId)) {
+            favouriteAirbnbs.removeFavourite(rentalId, this.getContext());
+
+            float colour;
+            int safetyIndex = rental.getSafetyIndex();
+            if (safetyIndex > 6)
+                colour = BitmapDescriptorFactory.HUE_GREEN;
+            else if (safetyIndex > 4)
+                colour = BitmapDescriptorFactory.HUE_YELLOW;
+            else colour = BitmapDescriptorFactory.HUE_RED;
+
+            rental.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(colour));
+        }
+        Toast.makeText(parentContext, "Works!", Toast.LENGTH_SHORT);
         super.onCancel(dialog);
+    }
+
+    private BitmapDescriptor getMarkerIconFromDrawable(Drawable drawable) {
+        Canvas canvas = new Canvas();
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        canvas.setBitmap(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+
+        /*Bitmap withBorder = Bitmap.createBitmap(bitmap.getWidth() + 2, bitmap.getHeight() + 2, bitmap.getConfig());
+        canvas = new Canvas(withBorder);
+        canvas.drawColor(Color.WHITE);
+        canvas.drawBitmap(bitmap, 1, 1, null);*/
+
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 }
