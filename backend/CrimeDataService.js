@@ -100,24 +100,24 @@ class CrimeDataService {
 
   // Precache crime rate in blocks within Vancouver
   updateCrimeSafety() {
+    const radius = 0.002;
     return new Promise((res, rej) => {
       db.getAllQuery().then((crimes) => {
-        console.log(crimes.length);
+        console.log(crimes.length + " crimes in total");
         for(let i = 0; i < this.crimeRates.length; i++){
           for(let j = 0; j < this.crimeRates[i].length; j++){
-            //console.log(this.crimeRates + "\n\n");
-            //console.log(crimes + "\n\n");
             var currlat = this.vanBound[0] + this.latincr * i;
             var currlng = this.vanBound[2] + this.lngincr * j;
-            // console.log(currlat, currlng);
-            // let convcoord = latlongToUTM.latLonToUTM(currlat, currlng);
-            let convcoord = [currlat, currlng];
-            let crimecount = crimes.filter((val) => util.filterCrimes(val, convcoord)).length;
-            // console.log(crimecount);
+            let crimecount = 0;
+            for(let crime of crimes){
+              if(Math.abs(crime.lng - currlat) < radius && Math.abs(crime.lat - currlng) < radius){
+                crimecount++;
+              }
+            }
             this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
           }
         }
-        // console.log(this.crimeRates);
+        console.log("Crime safety updated");
         res();
       }).catch((err) => {
           rej(err);
@@ -132,9 +132,9 @@ class CrimeDataService {
   updateCrimeDataSet() {
     var that = this;
     return that.updateVancouverDataSet()
-      .then((result) => {
-        return that.updateChicagoDataSet()
-      })
+      // .then((result) => {
+      //   return that.updateChicagoDataSet()
+      // })
       .then(() => {
         return that.updateCrimeSafety();
       });
@@ -146,13 +146,12 @@ class CrimeDataService {
       const output = fs.createWriteStream("crimedata.zip");
       output.on("finish", () => {
         that.unzipFile()
-        .then((result) => {that.mapCoordinates()})
-        .then((result) => {
+        .then((result) => {that.mapCoordinates().then(() =>{
           const parseColumns = "(type, year, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, lat, lng)"
-          return db.loadTable("crimedata_cov.csv", "crime_data", parseColumns);
-        })
-        .then((result) => resolve())
-        .catch((error) => reject(error));
+          db.loadTable("crimedata_cov.csv", "crime_data", parseColumns).then(() =>{
+            resolve();
+          });
+        })})
       });
       that.requestCrimeData(output, COVconfig).catch((error) => reject(error));
     });
@@ -224,7 +223,7 @@ class CrimeDataService {
       }))
       .pipe(csv.stringify())
       .pipe(writeStream);
-
+      
       writeStream.on('finish', () => {
         console.log("Finished conversion");
         resolve()

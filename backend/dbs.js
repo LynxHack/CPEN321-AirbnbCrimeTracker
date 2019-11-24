@@ -14,7 +14,6 @@ var dbConfig = {
   user: "root",
   password: "password",
   port: "3306"
-  // database: "crime_data"
 };
 
 class Db {
@@ -89,6 +88,7 @@ class Db {
           console.log(err + " while creating table!");
           reject(err);
         }
+
         console.log("Crime data table created");
         that.con.query("CREATE TABLE IF NOT EXISTS " + favouritesTableName + " (userId VARCHAR(255) NOT NULL, airbnbId VARCHAR(255) NOT NULL, PRIMARY KEY(userId, airbnbId))", function(err, result) {
           if (err) {
@@ -104,7 +104,6 @@ class Db {
 
   loadTable(fileName, tableName, columns) {
     var that = this;
-    console.log("Load table", fileName, tableName, columns);
     return new Promise(function(resolve, reject) {
       console.log("Loading Crime data " +  fileName + " into table...");
       console.time("dataLoad");

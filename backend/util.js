@@ -1,5 +1,5 @@
 // Global Variables
-const radiuspreset = 0.01;
+const radiuspreset = 0.03;
 
 var getdist = (x1,y1,x2,y2) => {
   // console.log(x1, x2, y1, y2, (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));

@@ -9,8 +9,9 @@ const PORT = 3000;
 var d = new Date();
 //console.log("Starting server at " + d.toLocaleString());
 
-crimeDataService.initializeCrimeDataSet().then((result) => {
-  console.log("DONE" + result);
+crimeDataService.initializeCrimeDataSet().then(() => {
+  crimeDataService.updateCrimeSafety();
+  console.log("DONE");
 });
 // crimeDataService.updateCrimeSafety();
 // console.log(crimeDataService.crimeRates);
