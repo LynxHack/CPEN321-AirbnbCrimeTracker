@@ -12,6 +12,61 @@ const EPOCH_HOUR = EPOCH_MIN * 60;
 const EPOCH_DAY = EPOCH_HOUR * 24;
 const EPOCH_WEEK = EPOCH_DAY * 7;
 
+const crimeSeverity = {
+// Vancouver
+  'Theft from Vehicle': 1.2,
+  'Theft of Vehicle': 1.5,
+  'Theft of Bicycle': 0.8,
+  'Other Theft': 0.7,
+  'Offence Against a Person': 1.5,
+  'Mischief': 0.5,
+  'Break and Enter Residential/Other': 1.8,
+  'Break and Enter Commercial': 1.8,
+  'Vehicle Collision or Pedestrian Struck (with Injury)': 0.6,
+
+// Chicago
+  'Theft from Vehicle': 1.2,
+  'Theft of Vehicle': 1.5,
+  'Theft of Bicycle': 0.8,
+  'Other Theft': 0.7,
+  'Offence Against a Person': 1.5,
+  'Mischief': 0.5,
+  'Break and Enter Residential/Other': 1.8,
+  'Break and Enter Commercial': 1.8,
+  'Vehicle Collision or Pedestrian Struck (with Injury)': 0.6,
+  "THEFT" : 1,
+  "OFFENSE INVOLVING CHILDREN" : 1.2,
+  "NARCOTICS" : 0.8,
+  "OTHER OFFENSE" : 0.5,
+  "BURGLARY" : 1.5,
+  "MOTOR VEHICLE THEFT" : 1.3,
+  "ASSAULT" : 1.6,
+  "BATTERY" : 1.6,
+  "CRIMINAL DAMAGE" : 0.7,
+  "WEAPONS VIOLATION" : 0.8,
+  "DECEPTIVE PRACTICE" : 1,
+  "PUBLIC PEACE VIOLATION" : 0.5,
+  "CRIMINAL TRESPASS" : 0.5,
+  "ROBBERY" : 1.6,
+  "PROSTITUTION" : 0.8,
+  "HOMICIDE" : 2.0,
+  "LIQUOR LAW VIOLATION" : 0.5,
+  "SEX OFFENSE" : 1.4,
+  "INTERFERENCE WITH PUBLIC OFFICER" : 0.5,
+  "ARSON" : 1.4,
+  "CRIM SEXUAL ASSAULT" : 1.5,
+  "KIDNAPPING" : 1.8,
+  "OTHER NARCOTIC VIOLATION" : 0.8,
+  "GAMBLING" : 0.9,
+  "OBSCENITY" : 0.8,
+  "STALKING" : 1.1,
+  "CONCEALED CARRY LICENSE VIOLATION" : 0.7,
+  "INTIMIDATION" : 1,
+  "HUMAN TRAFFICKING" : 2.0,
+  "PUBLIC INDECENCY": 0.8,
+  "NON-CRIMINAL" : 0.5
+}
+
 const COVconfig = {
   url: "http://" + "geodash.vpd.ca",
   path: "/opendata/crimedata_download/crimedata_csv_all_years.zip?disclaimer=on&x=163&y=41",
@@ -71,7 +126,7 @@ class CrimeDataService {
             }
           }
         }).then((result) => {
-          console.log("Server ready for requests!");
+          console.log("Database initialized");
         }).catch((err) => {
             reject(err);
         });
@@ -88,7 +143,7 @@ class CrimeDataService {
       console.log("Parameters outside of bounds!")
       return [0,0];
     }
-    console.log([Math.floor((lng - this.vanBound[0]) / this.latincr), Math.floor((lat - this.vanBound[2]) / this.lngincr)]);
+    // console.log([Math.floor((lng - this.vanBound[0]) / this.latincr), Math.floor((lat - this.vanBound[2]) / this.lngincr)]);
     return [Math.floor((lng - this.vanBound[0]) / this.latincr), Math.floor((lat - this.vanBound[2]) / this.lngincr)];
   }
 
@@ -110,10 +165,13 @@ class CrimeDataService {
             var currlng = this.vanBound[2] + this.lngincr * j;
             let crimecount = 0;
             for(let crime of crimes){
+              // console.log(Object.keys(crime));
               if(Math.abs(crime.lng - currlat) < radius && Math.abs(crime.lat - currlng) < radius){
-                crimecount++;
+                crimecount += crimeSeverity[crime.type] ? crimeSeverity[crime.type] : 1;
               }
             }
+            crimecount = Math.round(crimecount);
+            // console.log(crimecount);
             this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
           }
         }
