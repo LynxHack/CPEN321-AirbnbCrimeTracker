@@ -94,6 +94,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private View mapView;
 
     private LatLng currentLocation;
+//    private final String listingURL = "http://192.168.1.72:3000/getListing/";
     private final String listingURL = "http://52.12.72.93:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
@@ -246,24 +247,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void drawMarkers(JSONArray listings, int numListings){
         for (int i = 0; i < numListings; i++) {
-            JSONObject current = listings.getJSONObject(i);
-            LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
-            
-            if (!markerList.contains(coords)) {
-                int safetyIndex = current.getInt("safetyIndex");
-                float markerColour;
-                if (safetyIndex > 6)
-                    markerColour = BitmapDescriptorFactory.HUE_GREEN;
-                else if (safetyIndex > 4)
-                    markerColour = BitmapDescriptorFactory.HUE_YELLOW;
-                else markerColour = BitmapDescriptorFactory.HUE_RED;
+            try {
+                JSONObject current = listings.getJSONObject(i);
+                LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
 
-                mMap.addMarker(new MarkerOptions().position(coords)
-                        .title(current.getString("name")
-                                + "\nMax Occupancy: " + current.getInt("person_capacity")
-                                + "\nRating: " + current.getDouble("star_rating") + " Stars")
-                        .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
-                markerList.add(coords);
+                if (!markerList.contains(coords)) {
+                    int safetyIndex = current.getInt("safetyIndex");
+                    float markerColour;
+                    if (safetyIndex > 6)
+                        markerColour = BitmapDescriptorFactory.HUE_GREEN;
+                    else if (safetyIndex > 4)
+                        markerColour = BitmapDescriptorFactory.HUE_YELLOW;
+                    else markerColour = BitmapDescriptorFactory.HUE_RED;
+
+                    mMap.addMarker(new MarkerOptions().position(coords)
+                            .title(current.getString("name")
+                                    + "\nMax Occupancy: " + current.getInt("person_capacity")
+                                    + "\nRating: " + current.getDouble("star_rating") + " Stars")
+                            .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+                    markerList.add(coords);
+                }
+            }
+            catch(JSONException e){
+                System.out.println(e);
             }
 
         }
@@ -342,7 +348,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             int reviewCount = current.getInt("reviews_count");
                                             int capacity = current.getInt("person_capacity");
                                             String url = current.getString("picture");
-                                            int safety_index = current.getInt("safety_index");
+                                            int safety_index = current.getInt("safetyIndex");
 
                                             AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index);
 
@@ -380,13 +386,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 String body;
                                 //get response body and parse with appropriate encoding
-                                // try {
-                                body = new String(error.networkResponse.data, "UTF-8");
-                                Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
-
-                                // } catch (UnsupportedEncodingException e) {
-                                //     //exception handling to be placed here
-                                // }
+                                 try {
+                                    body = new String(error.networkResponse.data, "UTF-8");
+                                    Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
+                                 } catch (UnsupportedEncodingException e) {
+                                     //exception handling to be placed here
+                                 }
                             }
                         });
 
