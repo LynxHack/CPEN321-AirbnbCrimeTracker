@@ -102,7 +102,7 @@ router.get("/favourites", (req, res) => {
     }
 
     return userService.getFavourites(userId)
-    .then((result) => res.status(200).send(JSON.stringify(result)))
+    .then((result) => res.status(200).send(JSON.stringify({"Listings" : result})))
     .catch((error) => {
       res.status(500).send("Error while getting airbnbs from favourites!");
     });
