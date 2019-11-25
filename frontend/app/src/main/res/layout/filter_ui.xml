@@ -2,7 +2,8 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rsb="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:id="@+id/filter_ui">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -10,10 +11,7 @@
         android:orientation="vertical"
         android:padding="8dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Range seek bar initialized in code with ranges set"/>
+
 
         <FrameLayout
             android:id="@+id/seekbar_placeholder"
@@ -24,159 +22,96 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with default range"/>
+            android:text="SafetyIndex"
+            android:textSize="25dp"/>
 
         <org.florescu.android.rangeseekbar.RangeSeekBar
+            android:id="@+id/safetyIndex_slider"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            rsb:absoluteMaxValue="10"
+            rsb:absoluteMinValue="1"
+            rsb:valuesAboveThumbs="true"
+            rsb:textAboveThumbsColor="@color/airbnbRed"
+            rsb:activateOnDefaultValues="true"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with ranges set"/>
+            android:text="Price Range"
+            android:textSize="25dp"/>
 
 
         <org.florescu.android.rangeseekbar.RangeSeekBar
+            android:id="@+id/priceRange_slider"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"/>
+            rsb:absoluteMaxValue="2000"
+            rsb:absoluteMinValue="0"
+            rsb:step="10"
+            rsb:valuesAboveThumbs="true"
+            rsb:textAboveThumbsColor="@color/airbnbRed"
+            rsb:activateOnDefaultValues="true"/>
+
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with ranges and step set"/>
+            android:text="Number of Occupants"
+            android:textSize="25dp"/>
 
 
         <org.florescu.android.rangeseekbar.RangeSeekBar
+            android:id="@+id/numberOfOccupants_slider"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:step="10" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with ranges set and double values"/>
-
-
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="140.54"
-            rsb:absoluteMinValue="15.23"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with single thumb to true"/>
-
-
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:singleThumb="true"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with custom color to text above thumbs "/>
-
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
+            android:layout_height="101dp"
+            rsb:absoluteMaxValue="10"
+            rsb:absoluteMinValue="1"
             rsb:singleThumb="true"
-            rsb:textAboveThumbsColor="@android:color/holo_green_light"/>
+            rsb:valuesAboveThumbs="true"
+            rsb:textAboveThumbsColor="@color/airbnbRed"
+            rsb:activateOnDefaultValues="true"/>
 
-        <TextView
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Range seek bar from code with custom color to text above thumbs "/>
+            android:layout_gravity="left">
 
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:id="@+id/rangeSeekBarTextColorWithCode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:singleThumb="true"/>
+            <Button
+                android:id="@+id/filter_reset"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginBottom="0dp"
+                android:layout_weight="1"
+                style="?android:attr/borderlessButtonStyle"
+                android:background="@drawable/favourite_toggle"
+                android:paddingLeft="15dp"
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Range seek bar from xml with custom thumb handle"/>
+                android:text="RESET"
+                android:textColor="@color/airbnbRed" />
 
-
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:thumbDisabled="@mipmap/ic_launcher"
-            rsb:thumbNormal="@mipmap/ic_launcher"
-            rsb:thumbPressed="@mipmap/ic_launcher"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingBottom="4dp"
-            android:paddingTop="8dp"
-            android:text="Range seek bar from xml with no text above"/>
-
-
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:valuesAboveThumbs="false"/>
+            <Button
+                android:id="@+id/filter"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginBottom="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/book_button"
+                android:text="FILTER"
+                android:textColor="@color/white" />
+        </LinearLayout>
 
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:text="Range seek bar from xml with thumb shadow"
-            />
 
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:textAboveThumbsColor="@android:color/holo_purple"
-            rsb:thumbDisabled="@drawable/custom_slider_thumb"
-            rsb:thumbNormal="@drawable/custom_slider_thumb"
-            rsb:thumbPressed="@drawable/custom_slider_thumb"
-            rsb:thumbShadow="true"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingTop="8dp"
-            android:text="Range seek bar from xml with custom shadow"
-            />
-
-        <org.florescu.android.rangeseekbar.RangeSeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            rsb:absoluteMaxValue="150"
-            rsb:absoluteMinValue="20"
-            rsb:textAboveThumbsColor="@android:color/holo_purple"
-            rsb:thumbDisabled="@drawable/custom_slider_thumb"
-            rsb:thumbNormal="@drawable/custom_slider_thumb"
-            rsb:thumbPressed="@drawable/custom_slider_thumb"
-            rsb:thumbShadow="true"
-            rsb:thumbShadowBlur="3dp"
-            rsb:thumbShadowColor="@color/primary_material_light"
-            rsb:thumbShadowXOffset="1dp"
-            rsb:thumbShadowYOffset="2dp"
-            />
 
 
     </LinearLayout>
