@@ -34,6 +34,7 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
     private AirbnbRental rental;
     private FavouriteAirbnbs favouriteAirbnbs;
     private Context parentContext;
+    private ToggleButton favourite;
 
     BottomSheetDialog(AirbnbRental rental, FavouriteAirbnbs favouriteAirbnbs, Context parentContext) {
         this.rental = rental;
@@ -61,8 +62,8 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
         TextView title = v.findViewById(R.id.sheet_title);
         title.setText(rental.getName());
 
-        /*View divider = v.findViewById(R.id.divider);
-        divider.setBackgroundColor(textColour); */
+        TextView price = v.findViewById(R.id.price);
+        price.setText("$" + rental.getPrice() + "/night");
 
         TextView capacity = v.findViewById(R.id.room_capacity);
         capacity.setText("Capacity: " + rental.getCapacity() + " Occupants");
@@ -73,7 +74,8 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
         TextView numReviews = v.findViewById(R.id.num_reviews);
         numReviews.setText(rental.getReviewCount() + " Reviews");
 
-        Button favourite = v.findViewById(R.id.favourite);
+        favourite = v.findViewById(R.id.favourite);
+        favourite.setChecked(favouriteAirbnbs.isFavourite(rental.getId()));
 
         Button book = v.findViewById(R.id.book);
         book.setOnClickListener(new View.OnClickListener() {
@@ -93,7 +95,7 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
     public void onCancel(DialogInterface dialog) {
         // Toast doesn't appear but this works - Replace with favourite logic
         Integer rentalId = rental.getId();
-        if (!favouriteAirbnbs.isFavourite(rentalId)) {
+        if (!favouriteAirbnbs.isFavourite(rentalId) && favourite.isChecked()) {
             favouriteAirbnbs.addFavourite(rentalId, this.getContext());
 
             Drawable drawable = getResources().getDrawable(R.drawable.ic_star_favourite);
@@ -101,7 +103,7 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
 
             rental.getMarker().setIcon(icon);
         }
-        else if (favouriteAirbnbs.isFavourite(rentalId)) {
+        else if (favouriteAirbnbs.isFavourite(rentalId) && !favourite.isChecked()) {
             favouriteAirbnbs.removeFavourite(rentalId, this.getContext());
 
             float colour;

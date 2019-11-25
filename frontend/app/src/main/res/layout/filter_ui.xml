@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             rsb:absoluteMaxValue="10"
-            rsb:absoluteMinValue="1"
+            rsb:absoluteMinValue="0"
             rsb:valuesAboveThumbs="true"
             rsb:textAboveThumbsColor="@color/airbnbRed"
             rsb:activateOnDefaultValues="true"/>
@@ -65,7 +65,7 @@
             android:id="@+id/numberOfOccupants_slider"
             android:layout_width="match_parent"
             android:layout_height="101dp"
-            rsb:absoluteMaxValue="10"
+            rsb:absoluteMaxValue="16"
             rsb:absoluteMinValue="1"
             rsb:singleThumb="true"
             rsb:valuesAboveThumbs="true"
@@ -78,7 +78,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="left">
 
-            <Button
+            <!--Button
                 android:id="@+id/filter_reset"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -92,7 +92,7 @@
                 android:paddingLeft="15dp"
 
                 android:text="RESET"
-                android:textColor="@color/airbnbRed" />
+                android:textColor="@color/airbnbRed" /-->
 
             <Button
                 android:id="@+id/filter"

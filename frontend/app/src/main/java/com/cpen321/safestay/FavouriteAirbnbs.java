@@ -26,16 +26,19 @@ public class FavouriteAirbnbs {
     private List<Integer> favourites;
     private String userId;
     private final String favouriteURL = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/favourites/";
+    private final String favouriteQuery = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/favourites?";
 
     public FavouriteAirbnbs(String userId, Context parentContext) {
 
         this.userId = userId;
         favourites = new ArrayList<Integer>();
+        final Context context = parentContext;
 
         Map<String, String> params = new HashMap<>();
         params.put("userId", userId);
+        String url = favouriteQuery + "userId=" + userId;
 
-        CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, favouriteURL, params,
+        CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, url, params,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -43,7 +46,7 @@ public class FavouriteAirbnbs {
 //
                         try {
                             //JSONObject coordinates = response.getJSONArray("results").getJSONObject(0).getJSONObject("geometry").getJSONObject("location");
-                            JSONArray favouritesArray = response.getJSONArray("");
+                            JSONArray favouritesArray = response.getJSONArray("Listings");
 
                             int length = favouritesArray.length();
 
@@ -55,26 +58,18 @@ public class FavouriteAirbnbs {
                             //problem with receiving JSONObject
                             //OR
                             //problem with extracting info from JSONObject
-                            //Toast.makeText(parentContext, "Invalid city", Toast.LENGTH_SHORT).show();
-                            e.printStackTrace();
+                            Toast.makeText(context, "Failed to parse Favourite rentals!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        //Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
-                        if (error == null || error.networkResponse == null) {
-                            return;
-                        }
 
-                        String body;
-                        //get response body and parse with appropriate encoding
                         try {
-                            body = new String(error.networkResponse.data, "UTF-8");
-                            //Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Failed to retrieve Favourite rentals!\nError: " + error.toString(), Toast.LENGTH_SHORT).show();
 
-                        } catch (UnsupportedEncodingException e) {
+                        } catch (Exception e) {
                             //exception handling to be placed here
                         }
                     }
@@ -122,17 +117,18 @@ public class FavouriteAirbnbs {
         Map<String, String> params = new HashMap<>();
         params.put("userId", userId);
         params.put("airbnbId", Integer.toString(rentalId));
+        String url = favouriteQuery + "userId=" + userId + "&airbnbId=" + rentalId;
         final Integer rental = rentalId;
         final Context context = parentContext;
 
-        CustomRequest jsObjRequest = new CustomRequest(Request.Method.DELETE, favouriteURL, params,
+        CustomRequest jsObjRequest = new CustomRequest(Request.Method.DELETE, url, params,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         System.out.println("Airbnb removed");
 
                         try {
-                            Toast.makeText(context, "Rental removed!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Rental unfavourited!", Toast.LENGTH_SHORT).show();
                         } catch (Exception e) {
                             System.out.println("Failed to toast remove success");
                         }
@@ -142,20 +138,7 @@ public class FavouriteAirbnbs {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        //Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
-                        if (error == null || error.networkResponse == null) {
-                            return;
-                        }
-
-                        String body;
-                        //get response body and parse with appropriate encoding
-                        try {
-                            body = new String(error.networkResponse.data, "UTF-8");
-                            //Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
-
-                        } catch (UnsupportedEncodingException e) {
-                            //exception handling to be placed here
-                        }
+                        Toast.makeText(context, "Could not remove favourite!\nError: " + error.toString(), Toast.LENGTH_SHORT).show();
                     }
                 });
 
