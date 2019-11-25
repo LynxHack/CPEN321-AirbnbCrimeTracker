@@ -1,17 +1,5 @@
 package com.cpen321.safestay;
 
-import com.android.volley.RetryPolicy;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.fragment.app.FragmentActivity;
-
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -21,6 +9,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -28,12 +17,21 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.fragment.app.FragmentActivity;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -43,16 +41,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
-
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
 import com.google.android.libraries.places.api.model.Place;
@@ -62,9 +55,12 @@ import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -101,7 +97,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //    private final String listingURL = "http://192.168.1.72:3000/getListing/";
     private final String listingURL = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
-    private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
+    private final String googleSearchKey = "&key=";
     private List<LatLng> markerList = new ArrayList<LatLng>();
     private Map<Integer, AirbnbRental> rentalMap = new HashMap<Integer, AirbnbRental>();
     private LatLng farLeft;
@@ -110,13 +106,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String searchedCity = "";
     private BottomSheetDialog bottomSheet;
     private FavouriteAirbnbs favouriteAirbnbs;
-
+    private filterUI filterUI;
+    private filterData filterData;
     private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -130,7 +128,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getGoogleAccountInfo();
 
         // Initialize Places.
-        Places.initialize(getApplicationContext(), "AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE");
+        Places.initialize(getApplicationContext(), "");
         timerStarted = false;
 
         // Create a new Places client instance.
@@ -153,6 +151,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onButtonClicked(int buttonCode) {
                 if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
+
+                    if (filterUI != null)
+                        filterUI.dismiss();
+
+                    filterUI = new filterUI(filterData, getApplicationContext());
+                    filterUI.show(getSupportFragmentManager(), "test");
 
                 }
 
@@ -214,7 +218,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 AutocompletePrediction selectPrediction = predictionList.get(position);
                 String suggestion = materialSearchBar.getLastSuggestions().get(position).toString();
                 materialSearchBar.setText(suggestion);
-                materialSearchBar.clearSuggestions();
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        materialSearchBar.clearSuggestions();
+                    }
+                },1000);
+
+
                 InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 if(inputMethodManager != null)
                     inputMethodManager.hideSoftInputFromWindow(materialSearchBar.getWindowToken(),InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -253,6 +265,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+
     }
 
     public void drawMarkers(JSONArray listings, int numListings){
@@ -355,6 +368,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             int capacity = current.getInt("person_capacity");
                                             String url = current.getJSONObject("picture").getString("picture");
                                             int safety_index = current.getInt("safetyIndex");
+                                            int price = current.getInt("price");
 
                                             float markerColour;
 
@@ -369,7 +383,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                                     .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
                                             marker.setTag(id);
 
-                                            AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index, marker);
+                                            AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index, marker, price);
 
                                             rentalMap.put(id, rental);
                                         }
