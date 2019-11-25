@@ -25,6 +25,9 @@ router.get("/getListing", (req, res) => {
   var enddate = req.query["enddate"];
   var minprice = Number(req.query["minprice"]);
   var maxprice = Number(req.query["maxprice"]);
+  var minsafety = Number(req.query["minsafety"]);
+  var maxsafety = Number(req.query["maxsafety"]);
+
   var coord = [(yrange[0] + yrange[1])/2,(xrange[0] + xrange[1])/2];
   var mainquery = reverse.lookup(coord[0], coord[1], "ca").city.split(" ")[0];
   mainquery = 'Vancouver';
@@ -45,19 +48,25 @@ router.get("/getListing", (req, res) => {
                             ({id, lat, lng, name, star_rating, reviews_count, person_capacity, picture, pricing_quote}))(listing);
                   });
 
-    // Filter by price
-    if(minprice || maxprice){
-      minprice = minprice ? minprice : 0;
-      maxprice = maxprice ? maxprice : Number.MAX_SAFE_INTEGER;
-      pruned = pruned.filter((x) => {return x.pricing_quote.rate.amount >= minprice && x.pricing_quote.rate.amount <= maxprice});
-    }
-
     // console.log(pruned);
 
     // Size of radius to check for crimes
     for(let listing of pruned){
       listing.safetyIndex = crimeDataService.getCrimeRate(listing.lat, listing.lng);
     }
+
+    // Filter by price and min and max safety_index
+    if(minprice || maxprice || minsafety || maxsafety){
+      minprice = minprice ? minprice : 0;
+      maxprice = maxprice ? maxprice : Number.MAX_SAFE_INTEGER;
+      minsafety = minsafety ? minsafety : 0;
+      maxsafety = maxsafety ? maxsafety : Number.MAX_SAFE_INTEGER;
+      pruned = pruned.filter((x) => {return x.pricing_quote.rate.amount >= minprice 
+                                         && x.pricing_quote.rate.amount <= maxprice
+                                         && x.safetyIndex >= minsafety
+                                         && x.safetyIndex <= maxsafety});
+    }
+
     res.status(200).send(JSON.stringify({"Listings" : pruned}));
   }).catch((error) => {
     res.status(500).send("Failed to load from Airbnb Microservice");
