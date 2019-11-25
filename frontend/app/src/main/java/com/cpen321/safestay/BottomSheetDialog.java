@@ -7,12 +7,14 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
@@ -71,8 +73,7 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
         TextView numReviews = v.findViewById(R.id.num_reviews);
         numReviews.setText(rental.getReviewCount() + " Reviews");
 
-        /*ToggleButton favourite = v.findViewById(R.id.favourite);
-        favourite.setChecked(false);*/
+        Button favourite = v.findViewById(R.id.favourite);
 
         Button book = v.findViewById(R.id.book);
         book.setOnClickListener(new View.OnClickListener() {

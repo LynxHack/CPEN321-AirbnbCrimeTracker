@@ -82,7 +82,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left">
 
-        <Button
+        <!--Button
             android:id="@+id/favourite"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -96,7 +96,19 @@
             android:paddingLeft="15dp"
             android:drawableLeft="@drawable/ic_star_favourite"
             android:text="Favourite"
-            android:textColor="@color/airbnbRed" />
+            android:textColor="@color/airbnbRed" /-->
+
+        <ToggleButton
+            android:id="@+id/favourite"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="5dp"
+            android:layout_weight="1"
+            android:drawableStart="@drawable/favourite_toggle"
+            android:drawable="@drawable/favourite_shape"/>
 
         <Button
             android:id="@+id/book"
