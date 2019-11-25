@@ -70,7 +70,7 @@ router.get("/getListing", (req, res) => {
 
     res.status(200).send(JSON.stringify({"Listings" : pruned}));
   }).catch((error) => {
-    console.log(error);
+    // console.log(error);
     res.status(500).send("Failed to load from Airbnb Microservice");
   });
 });

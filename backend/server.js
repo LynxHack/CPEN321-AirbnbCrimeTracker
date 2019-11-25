@@ -11,7 +11,7 @@ var d = new Date();
 
 crimeDataService.initializeCrimeDataSet().then(() => {
   crimeDataService.updateCrimeSafety();
-  console.log("DONE");
+  // console.log("DONE");
 });
 // crimeDataService.updateCrimeSafety();
 // console.log(crimeDataService.crimeRates);

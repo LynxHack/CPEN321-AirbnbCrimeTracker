@@ -254,8 +254,8 @@ describe('Testing Routes getListings', () => {
     }
 
     expect.assertions(2);
-    await routes.testGetEndpoint("/getListing", {query: {xmin:-123.27, xmax:-123.02, ymin:49.195, ymax:49.315, minsafety: 0, maxsafety: 4}}, res);
-    expect(res.message).toBe("{\"Listings\":[{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":60}},\"safetyIndex\":0},{\"id\":\"2\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":1}]}");
+    await routes.testGetEndpoint("/getListing", {query: {xmin:-123.27, xmax:-123.02, ymin:49.195, ymax:49.315, minsafety: 1, maxsafety: 4}}, res);
+    expect(res.message).toBe("{\"Listings\":[{\"id\":\"2\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":1}]}");
     expect(res.state).toBe(200);
   })
 })

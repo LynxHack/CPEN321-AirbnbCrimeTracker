@@ -98,7 +98,7 @@ class CrimeDataService {
         .then((result) => db.checkLastUpdate())
         .then((result) => {
           if (!result) {
-            console.log("Table empty, loading crime data...");
+            // console.log("Table empty, loading crime data...");
             that.updateCrimeDataSet().then((result) => resolve());
           } else {
             var date = new Date(result.created_at);
@@ -114,7 +114,7 @@ class CrimeDataService {
             }
           }
         }).then((result) => {
-          console.log("Database initialized");
+          // console.log("Database initialized");
         }).catch((err) => {
             reject(err);
         });
@@ -126,9 +126,9 @@ class CrimeDataService {
   }
 
   getIndex(lat, lng){
-    console.log(lat, lng, this.vanBound)
+    // console.log(lat, lng, this.vanBound)
     if(!this.between(lat, this.vanBound[2], this.vanBound[3]) || !this.between(lng, this.vanBound[0], this.vanBound[1])){
-      console.log("Parameters outside of bounds!")
+      // console.log("Parameters outside of bounds!")
       return [0,0];
     }
     // console.log([Math.floor((lng - this.vanBound[0]) / this.latincr), Math.floor((lat - this.vanBound[2]) / this.lngincr)]);
@@ -146,7 +146,7 @@ class CrimeDataService {
     const radius = 0.002;
     return new Promise((res, rej) => {
       db.getAllQuery().then((crimes) => {
-        console.log(crimes.length + " crimes in total");
+        // console.log(crimes.length + " crimes in total");
         for(let i = 0; i < this.crimeRates.length; i++){
           for(let j = 0; j < this.crimeRates[i].length; j++){
             var currlat = this.vanBound[0] + this.latincr * i;
@@ -163,7 +163,7 @@ class CrimeDataService {
             this.crimeRates[parseInt(i)][parseInt(j)] = crimecount > 2000 ? 0 : Math.floor(10 - crimecount / 200);
           }
         }
-        console.log("Crime safety updated");
+        // console.log("Crime safety updated");
         res();
       }).catch((err) => {
           rej(err);
@@ -237,10 +237,10 @@ class CrimeDataService {
   unzipFile() {
     return new Promise(function(resolve, reject) {
       try {
-        console.log("Extracting crime data from zipped file...");
+        // console.log("Extracting crime data from zipped file...");
         var file = new Zip("crimedata.zip");
         file.extractEntryTo(fileName, "./", false, true);
-        console.log("Crime Data has been extracted!");
+        // console.log("Crime Data has been extracted!");
         resolve();
       } catch (err) {
         reject(err);
@@ -254,7 +254,7 @@ class CrimeDataService {
       var readStream = fs.createReadStream("crimedata_csv_all_years.csv");
       var writeStream = fs.createWriteStream("crimedata_cov.csv");
 
-      console.log("Converting COV file to use latitude longitude...")
+      // console.log("Converting COV file to use latitude longitude...")
       readStream.pipe(csv.parse({ columns: true }))
       .pipe(csv.transform(function(data) {
           if(typeof(data['X']) != 'number') {
@@ -271,7 +271,7 @@ class CrimeDataService {
       .pipe(writeStream);
 
       writeStream.on('finish', () => {
-        console.log("Finished conversion");
+        // console.log("Finished conversion");
         resolve()
       })
     });

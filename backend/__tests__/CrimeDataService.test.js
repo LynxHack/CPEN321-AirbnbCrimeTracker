@@ -203,7 +203,7 @@ describe('Testing Crime Data Service getCrimeRate(lat, lng)', () => {
     expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(5)
   });
 
-  it('High Severity Crime, 19', async () => {
+  it('High Severity Crime, 1', async () => {
     var aboveIndex = new Array(1000);
     aboveIndex.fill({type:"Break and Enter Residential/Other",year:2005,lng:-123.02630548,lat:49.20863951});
 
@@ -213,7 +213,7 @@ describe('Testing Crime Data Service getCrimeRate(lat, lng)', () => {
     expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(1)
   });
 
-  it('Medium Severity Crime, 5', async () => {
+  it('Medium Severity Crime, 6', async () => {
     var aboveIndex = new Array(1000);
     aboveIndex.fill({type:"Theft of Bicycle",year:2005,lng:-123.02630548,lat:49.20863951});
 
@@ -223,7 +223,7 @@ describe('Testing Crime Data Service getCrimeRate(lat, lng)', () => {
     expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(6)
   });
 
-  it('Low Severity Crime, 2', async () => {
+  it('Low Severity Crime, 7', async () => {
     var aboveIndex = new Array(1000);
     aboveIndex.fill({type:"Mischief",year:2005,lng:-123.02630548,lat:49.20863951});
 
@@ -231,6 +231,16 @@ describe('Testing Crime Data Service getCrimeRate(lat, lng)', () => {
     expect.assertions(2);
     await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
     expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(7)
+  });
+
+  it('None Listed Crime, 2', async () => {
+    var aboveIndex = new Array(1000);
+    aboveIndex.fill({type:"New crime",year:2005,lng:-123.02630548,lat:49.20863951});
+
+    db.getAllQuery.mockReturnValue(new Promise(function(resolve, reject) {resolve(aboveIndex)}));
+    expect.assertions(2);
+    await expect(crimeDataService.updateCrimeSafety()).resolves.toEqual(undefined);
+    expect(crimeDataService.getCrimeRate(49.20863951, -123.02630548)).toBe(5)
   });
 
   it('Test below lng, valid lng', () => {
