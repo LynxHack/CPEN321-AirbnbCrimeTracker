@@ -2,5 +2,6 @@
 /backend/.env
 /backend/crimedata.zip
 /backend/crimedata_csv_all_years.csv
+/backend/crimedata_cov.csv
 core
 /backend/coverage
