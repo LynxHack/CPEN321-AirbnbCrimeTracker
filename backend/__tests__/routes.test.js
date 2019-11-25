@@ -58,10 +58,15 @@ describe('Testing Routes getListings', () => {
       star_rating: 2.5,
       reviews_count: 10,
       person_capacity: 5,
-      picture: {}
+      picture: {},
     }
 
-    var tabs = {sections: [{listings: [{listing: test}]}]}
+    var tabs = {sections: [{listings: [{listing: test,
+                                        pricing_quote:{
+                                          "rate":{
+                                            "amount":60
+                                          }
+                                        }}]}]}
     var axiosReturnObj = {data: {explore_tabs: [tabs]}}
     axios.get.mockReturnValue(new Promise(function(resolve, reject) { resolve(axiosReturnObj) }));
     reverse.lookup.mockReturnValue({city:{split: () => {return ["Vancouver"]}}});
@@ -69,7 +74,7 @@ describe('Testing Routes getListings', () => {
 
     expect.assertions(2);
     await routes.testGetEndpoint("/getListing", {query: {xmin:-123.27, xmax:-123.02, ymin:49.195, ymax:49.315}}, res);
-    expect(res.message).toBe('{"Listings":[{"id":"1","lat":-123.02630548,"lng":49.20863951,"name":"listing 1","star_rating":2.5,"reviews_count":10,"person_capacity":5,"picture":{},"safetyIndex":0}]}');
+    expect(res.message).toBe("{\"Listings\":[{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":60}},\"safetyIndex\":0}]}");
     expect(res.state).toBe(200);
   })
 
@@ -95,10 +100,16 @@ describe('Testing Routes getListings', () => {
       star_rating: 2.5,
       reviews_count: 10,
       person_capacity: 5,
-      picture: {}
+      picture: {},
     }
     var listingsArr = new Array(10);
-    listingsArr.fill({listing: test})
+    listingsArr.fill({listing: test,
+                      pricing_quote:{
+                        rate:{
+                          amount:80
+                        }
+                      }
+                    })
     var tabs = {sections: [{listings: listingsArr}]}
     var axiosReturnObj = {data: {explore_tabs: [tabs]}}
     axios.get.mockReturnValue(new Promise(function(resolve, reject) { resolve(axiosReturnObj) }));
@@ -108,11 +119,9 @@ describe('Testing Routes getListings', () => {
         crimeDataService.getCrimeRate.mockReturnValueOnce(i);
     }
 
-
-    expect.assertions(3);
+    expect.assertions(2);
     await routes.testGetEndpoint("/getListing", {query: {xmin:-123.27, xmax:-123.02, ymin:49.195, ymax:49.315}}, res);
-    expect(res.message).toEqual(expect.stringContaining('{"id":"1","lat":-123.02630548,"lng":49.20863951,"name":"listing 1","star_rating":2.5,"reviews_count":10,"person_capacity":5,"picture":{},"safetyIndex":0}'));
-    expect(res.message).toEqual(expect.stringContaining('{"id":"1","lat":-123.02630548,"lng":49.20863951,"name":"listing 1","star_rating":2.5,"reviews_count":10,"person_capacity":5,"picture":{},"safetyIndex":9}'));
+    expect(res.message).toEqual(expect.stringContaining("{\"Listings\":[{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":0},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":1},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":2},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":3},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":4},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":5},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":6},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":7},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":8},{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":9}]}"  ));
     expect(res.state).toBe(200);
   })
 
@@ -133,7 +142,7 @@ describe('Testing Routes getListings', () => {
       star_rating: 2.5,
       reviews_count: 10,
       person_capacity: 5,
-      picture: {}
+      picture: {},
     }
 
     //missing inner object fields
@@ -148,6 +157,107 @@ describe('Testing Routes getListings', () => {
     expect(res.message).toBe("Failed to load from Airbnb Microservice");
     expect(res.state).toBe(500);
   })
+
+  it('getListings price filtering', async() => {
+    var test1 = {
+      id: "1",
+      lat: -123.02630548,
+      lng: 49.20863951,
+      name: "listing 1",
+      star_rating: 2.5,
+      reviews_count: 10,
+      person_capacity: 5,
+      picture: {}
+    }
+    var test2 = {
+      id: "2",
+      lat: -123.02630548,
+      lng: 49.20863951,
+      name: "listing 1",
+      star_rating: 2.5,
+      reviews_count: 10,
+      person_capacity: 5,
+      picture: {}
+    }
+    var listingsArr = [
+      {listing:test1, 
+        pricing_quote:{
+        rate:{
+          amount:60
+        }
+      }}, {
+        listing:test2,
+        pricing_quote:{
+          rate:{
+            amount:80
+          }
+        }
+      }];
+    var tabs = {sections: [{listings: listingsArr}]}
+    var axiosReturnObj = {data: {explore_tabs: [tabs]}}
+    axios.get.mockReturnValue(new Promise(function(resolve, reject) { resolve(axiosReturnObj) }));
+    reverse.lookup.mockReturnValue({city:{split: () => {return ["Vancouver"]}}});
+
+    for(var i = 0; i < 2; i++) {
+        crimeDataService.getCrimeRate.mockReturnValueOnce(i);
+    }
+
+
+    expect.assertions(2);
+    await routes.testGetEndpoint("/getListing", {query: {xmin:-123.27, xmax:-123.02, ymin:49.195, ymax:49.315, minprice: 60, maxprice: 70}}, res);
+    expect(res.message).toBe("{\"Listings\":[{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":60}},\"safetyIndex\":0}]}");
+    expect(res.state).toBe(200);
+  })
+
+  it('getListings safety index filtering', async() => {
+    var test1 = {
+      id: "1",
+      lat: -123.02630548,
+      lng: 49.20863951,
+      name: "listing 1",
+      star_rating: 2.5,
+      reviews_count: 10,
+      person_capacity: 5,
+      picture: {}
+    }
+    var test2 = {
+      id: "2",
+      lat: -123.02630548,
+      lng: 49.20863951,
+      name: "listing 1",
+      star_rating: 2.5,
+      reviews_count: 10,
+      person_capacity: 5,
+      picture: {}
+    }
+    var listingsArr = [
+      {listing:test1, 
+        pricing_quote:{
+        rate:{
+          amount:60
+        }
+      }}, {
+        listing:test2,
+        pricing_quote:{
+          rate:{
+            amount:80
+          }
+        }
+      }];
+    var tabs = {sections: [{listings: listingsArr}]}
+    var axiosReturnObj = {data: {explore_tabs: [tabs]}}
+    axios.get.mockReturnValue(new Promise(function(resolve, reject) { resolve(axiosReturnObj) }));
+    reverse.lookup.mockReturnValue({city:{split: () => {return ["Vancouver"]}}});
+
+    for(var i = 0; i < 2; i++) {
+        crimeDataService.getCrimeRate.mockReturnValueOnce(i);
+    }
+
+    expect.assertions(2);
+    await routes.testGetEndpoint("/getListing", {query: {xmin:-123.27, xmax:-123.02, ymin:49.195, ymax:49.315, minsafety: 0, maxsafety: 4}}, res);
+    expect(res.message).toBe("{\"Listings\":[{\"id\":\"1\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":60}},\"safetyIndex\":0},{\"id\":\"2\",\"lat\":-123.02630548,\"lng\":49.20863951,\"name\":\"listing 1\",\"star_rating\":2.5,\"reviews_count\":10,\"person_capacity\":5,\"picture\":{},\"pricing_quote\":{\"rate\":{\"amount\":80}},\"safetyIndex\":1}]}");
+    expect(res.state).toBe(200);
+  })
 })
 
 describe('Testing Routes GET /favourites', () => {
@@ -155,7 +265,7 @@ describe('Testing Routes GET /favourites', () => {
     userService.getFavourites.mockReturnValue(new Promise(function(resolve, reject) {resolve({response:"response"})}));
     await routes.testGetEndpoint("/favourites", {query: {userId: "1"}}, res);
     expect.assertions(2);
-    expect(res.message).toBe('{\"response\":\"response\"}');
+    expect(res.message).toBe('{"Listings":{\"response\":\"response\"}}');
     expect(res.state).toBe(200);
   })
 

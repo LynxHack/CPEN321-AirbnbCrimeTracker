@@ -201,7 +201,7 @@ describe('Testing Routes GET /favourites', () => {
     await db.connectToDb();
     await routes.testGetEndpoint("/favourites", {query: {userId: "1"}}, res);
     expect.assertions(2);
-    expect(res.message).toBe('["1","2"]');
+    expect(res.message).toBe('{"Listings":["1","2"]}');
     expect(res.state).toBe(200);
   })
 
