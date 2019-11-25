@@ -9,7 +9,7 @@ usage()
 {
     cat << USAGE >&2
 Usage:
-    $WAITFORIT_cmdname host:port [-s] [-t timeout] [-- command args]
+    "$WAITFORIT_cmdname" host:port [-s] [-t timeout] [-- command args]
     -h HOST | --host=HOST       Host or IP under test
     -p PORT | --port=PORT       TCP port under test
                                 Alternatively, you specify the host and port as host:port
@@ -33,10 +33,10 @@ wait_for()
     while :
     do
         if [[ $WAITFORIT_ISBUSY -eq 1 ]]; then
-            nc -z $WAITFORIT_HOST $WAITFORIT_PORT
+            nc -z "$WAITFORIT_HOST" "$WAITFORIT_PORT"
             WAITFORIT_result=$?
         else
-            (echo > /dev/tcp/$WAITFORIT_HOST/$WAITFORIT_PORT) >/dev/null 2>&1
+            (echo > /dev/tcp/"$WAITFORIT_HOST"/"$WAITFORIT_PORT") >/dev/null 2>&1
             WAITFORIT_result=$?
         fi
         if [[ $WAITFORIT_result -eq 0 ]]; then
@@ -52,10 +52,10 @@ wait_for()
 wait_for_wrapper()
 {
     # In order to support SIGINT during timeout: http://unix.stackexchange.com/a/57692
-    if [[ $WAITFORIT_QUIET -eq 1 ]]; then
-        timeout $WAITFORIT_BUSYTIMEFLAG $WAITFORIT_TIMEOUT $0 --quiet --child --host=$WAITFORIT_HOST --port=$WAITFORIT_PORT --timeout=$WAITFORIT_TIMEOUT &
+    if [[ "$WAITFORIT_QUIET" -eq 1 ]]; then
+        timeout "$WAITFORIT_BUSYTIMEFLAG" "$WAITFORIT_TIMEOUT" "$0" --quiet --child --host="$WAITFORIT_HOST" --port="$WAITFORIT_PORT" --timeout="$WAITFORIT_TIMEOUT" &
     else
-        timeout $WAITFORIT_BUSYTIMEFLAG $WAITFORIT_TIMEOUT $0 --child --host=$WAITFORIT_HOST --port=$WAITFORIT_PORT --timeout=$WAITFORIT_TIMEOUT &
+        timeout "$WAITFORIT_BUSYTIMEFLAG" "$WAITFORIT_TIMEOUT" "$0" --child --host="$WAITFORIT_HOST" --port="$WAITFORIT_PORT" --timeout="$WAITFORIT_TIMEOUT" &
     fi
     WAITFORIT_PID=$!
     trap "kill -INT -$WAITFORIT_PID" INT
@@ -91,7 +91,7 @@ do
         ;;
         -h)
         WAITFORIT_HOST="$2"
-        if [[ $WAITFORIT_HOST == "" ]]; then break; fi
+        if [[ "$WAITFORIT_HOST" == "" ]]; then break; fi
         shift 2
         ;;
         --host=*)
@@ -100,7 +100,7 @@ do
         ;;
         -p)
         WAITFORIT_PORT="$2"
-        if [[ $WAITFORIT_PORT == "" ]]; then break; fi
+        if [[ "$WAITFORIT_PORT" == "" ]]; then break; fi
         shift 2
         ;;
         --port=*)
@@ -143,7 +143,7 @@ WAITFORIT_QUIET=${WAITFORIT_QUIET:-0}
 
 # check to see if timeout is from busybox?
 WAITFORIT_TIMEOUT_PATH=$(type -p timeout)
-WAITFORIT_TIMEOUT_PATH=$(realpath $WAITFORIT_TIMEOUT_PATH 2>/dev/null || readlink -f $WAITFORIT_TIMEOUT_PATH)
+WAITFORIT_TIMEOUT_PATH=$(realpath "$WAITFORIT_TIMEOUT_PATH" 2>/dev/null || readlink -f "$WAITFORIT_TIMEOUT_PATH")
 if [[ $WAITFORIT_TIMEOUT_PATH =~ "busybox" ]]; then
         WAITFORIT_ISBUSY=1
         WAITFORIT_BUSYTIMEFLAG="-t"

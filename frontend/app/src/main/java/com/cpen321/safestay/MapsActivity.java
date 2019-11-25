@@ -78,19 +78,27 @@ import java.util.TimerTask;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    // private LocationManager locationManager;
+
+
+    // private Location mLastKnownLocation;
+    // private LocationCallback locationCallback;
+
+    // private MaterialSearchBar materialSearchBar;
     private LocationManager locationManager;
     private PlacesClient placesClient;
     private List<AutocompletePrediction> predictionList;
     private static final String CHANNEL_ID = "channel1";
     private NotificationCompat.Builder builder;
 
-    private Location mLastKnownLocation;
-    private LocationCallback locationCallback;
+    // private Location mLastKnownLocation;
+    // private LocationCallback locationCallback;
 
     private MaterialSearchBar materialSearchBar;
     private View mapView;
 
     private LatLng currentLocation;
+//    private final String listingURL = "http://192.168.1.72:3000/getListing/";
     private final String listingURL = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
@@ -133,7 +141,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
             @Override
             public void onSearchStateChanged(boolean enabled) {
-
             }
 
             @Override
@@ -158,7 +165,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         materialSearchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
             @Override
@@ -249,6 +255,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    public void drawMarkers(JSONArray listings, int numListings){
+        for (int i = 0; i < numListings; i++) {
+            try {
+                JSONObject current = listings.getJSONObject(i);
+                LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
+
+                if (!markerList.contains(coords)) {
+                    int safetyIndex = current.getInt("safetyIndex");
+                    float markerColour;
+                    if (safetyIndex > 6)
+                        markerColour = BitmapDescriptorFactory.HUE_GREEN;
+                    else if (safetyIndex > 4)
+                        markerColour = BitmapDescriptorFactory.HUE_YELLOW;
+                    else markerColour = BitmapDescriptorFactory.HUE_RED;
+
+                    mMap.addMarker(new MarkerOptions().position(coords)
+                            .title(current.getString("name")
+                                    + "\nMax Occupancy: " + current.getInt("person_capacity")
+                                    + "\nRating: " + current.getDouble("star_rating") + " Stars")
+                            .icon(BitmapDescriptorFactory.defaultMarker(markerColour)));
+                    markerList.add(coords);
+                }
+            }
+            catch(JSONException e){
+                System.out.println(e);
+            }
+
+        }
+    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -288,16 +323,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
-
                 VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
                 farLeft = visibleRegion.farLeft;
                 nearRight = visibleRegion.nearRight;
-
-                /*Map<String, String> params = new HashMap<>();
-                params.put("xmin", Double.toString(farLeft.longitude));
-                params.put("xmax", Double.toString(nearRight.longitude));
-                params.put("ymin", Double.toString(nearRight.latitude));
-                params.put("ymax", Double.toString(farLeft.latitude));*/
 
                 String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
                 System.out.println(url);
@@ -349,9 +377,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     }
 
                                 } catch (JSONException e) {
-                                    //problem with receiving JSONObject
-                                    //OR
-                                    //problem with extracting info from JSONObject
                                     Toast.makeText(getApplicationContext(), "JSON Exception in login activity!!", Toast.LENGTH_SHORT).show();
                                     e.printStackTrace();
                                 }
@@ -367,13 +392,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 String body;
                                 //get response body and parse with appropriate encoding
-                                try {
+                                 try {
                                     body = new String(error.networkResponse.data, "UTF-8");
                                     Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
-
-                                } catch (UnsupportedEncodingException e) {
-                                    //exception handling to be placed here
-                                }
+                                 } catch (UnsupportedEncodingException e) {
+                                     //exception handling to be placed here
+                                 }
                             }
                         });
 
@@ -390,7 +414,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     @Override
                     public void retry(VolleyError error) throws VolleyError {
-
                     }
                 });
 
@@ -400,8 +423,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void userLocation() {
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -419,7 +441,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        System.out.println("RECEIVED RESPONSE" + response.toString());
+                        // System.out.println("RECEIVED RESPONSE" + response.toString());
 //
                         try {
                             JSONObject coordinates = response.getJSONArray("results").getJSONObject(0).getJSONObject("geometry").getJSONObject("location");

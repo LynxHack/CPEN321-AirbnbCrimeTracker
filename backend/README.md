@@ -1,21 +1,21 @@
 ## Docker Build Image
 
-```
+```shell
 docker build -t express-server:dockerfile .
 ```
 
 ## Docker Run Image By Itself
 
-```
+```shell
 docker run -p 3000:3000 -d express-server:dockerfile
 ```
 
 ## Run Both Python Microservice and Nodejs Server
 
-```
+```shell
 docker-compose build
 ```
-```
+```shell
 docker-compose up
 ```
 
@@ -23,13 +23,13 @@ docker-compose up
 
 To run the backend server
 
-```
+```shell
 node server.js
 ```
 
 or
 
-```
+```shell
 npm start
 ```
 
@@ -39,7 +39,7 @@ Linux / OSX
 
 Run in terminal
 
-```
+```shell
 ifconfig | grep "inet " | grep -v 127.0.0.1
 ```
 
