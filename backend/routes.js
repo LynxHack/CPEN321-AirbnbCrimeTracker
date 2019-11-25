@@ -88,7 +88,7 @@ router.delete("/favourites", (req, res) => {
     }
 
     return userService.deleteFavourite(userId, airbnbId)
-    .then(res.status(200).send(JSON.stringify(JSON.stringify({"message":"Ok"})))
+    .then(res.status(200).send(JSON.stringify(JSON.stringify({"message":"Ok"}))))
     .catch((error) => {
       res.status(500).send("Error while removing airbnb from favourites!");
     });
