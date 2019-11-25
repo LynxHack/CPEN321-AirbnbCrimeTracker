@@ -2,7 +2,6 @@ const http = require("http");
 const fs = require("fs");
 const Zip = require("adm-zip");
 const db = require("./dbs");
-const util = require("./util");
 const latlongToUTM = require("./latlongToUTM");
 const csv = require("csv");
 
@@ -14,18 +13,6 @@ const EPOCH_WEEK = EPOCH_DAY * 7;
 const clear = false;
 
 const crimeSeverity = {
-// Vancouver
-  'Theft from Vehicle': 1.2,
-  'Theft of Vehicle': 1.5,
-  'Theft of Bicycle': 0.8,
-  'Other Theft': 0.7,
-  'Offence Against a Person': 1.5,
-  'Mischief': 0.5,
-  'Break and Enter Residential/Other': 1.8,
-  'Break and Enter Commercial': 1.8,
-  'Vehicle Collision or Pedestrian Struck (with Injury)': 0.6,
-
-// Chicago
   'Theft from Vehicle': 1.2,
   'Theft of Vehicle': 1.5,
   'Theft of Bicycle': 0.8,

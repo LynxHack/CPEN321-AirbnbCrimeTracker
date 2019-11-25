@@ -26,7 +26,7 @@ class Db {
           //console.log(err + " while connecting to mysql!");
           reject(err);
         }
-        console.log("Connected to Database!");
+        // console.log("Connected to Database!");
         resolve();
       });
 

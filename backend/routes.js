@@ -1,5 +1,5 @@
 require("dotenv").config();
-const util = require("./util");
+// const util = require("./util");
 const express = require("express");
 const router = new express.Router();
 const bodyParser = require("body-parser");
@@ -40,6 +40,7 @@ router.get("/getListing", (req, res) => {
   }).then((result) => {
     var pruned = result.data.explore_tabs[0].sections.pop();
     pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {
+      // console.log(x);
       x.listing['pricing_quote'] = x.pricing_quote;
       return x.listing;
     });
@@ -69,6 +70,7 @@ router.get("/getListing", (req, res) => {
 
     res.status(200).send(JSON.stringify({"Listings" : pruned}));
   }).catch((error) => {
+    console.log(error);
     res.status(500).send("Failed to load from Airbnb Microservice");
   });
 });
