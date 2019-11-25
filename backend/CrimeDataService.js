@@ -223,12 +223,12 @@ class CrimeDataService {
     return new Promise(function(resolve, reject) {
       const request = http.get(config);
       request.on("response", (response) => {
-        console.log("Request to " + config.url + " Successful with code " + response.statusCode);
+        // console.log("Request to " + config.url + " Successful with code " + response.statusCode);
           response.pipe(output);
           resolve();
-        console.log(config.url + " Response has been saved to file!");
+        // console.log(config.url + " Response has been saved to file!");
       }).on("err", (error) => {
-        console.log(error + " Request to " + config.url + " Failed");
+        // console.log(error + " Request to " + config.url + " Failed");
         reject(error);
       });
     });
