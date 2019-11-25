@@ -53,7 +53,7 @@ router.get("/getListing", (req, res) => {
     }
 
     // console.log(pruned);
-    
+
     // Size of radius to check for crimes
     for(let listing of pruned){
       listing.safetyIndex = crimeDataService.getCrimeRate(listing.lat, listing.lng);
@@ -73,7 +73,7 @@ router.put("/favourites", (req, res) => {
     }
 
     return userService.addFavourite(userId, airbnbId)
-    .then(res.status(200).end())
+    .then(res.status(200).send("Ok"))
     .catch((error) => {
       res.status(500).send("Error while adding airbnb to favourites!");
     });
@@ -88,7 +88,7 @@ router.delete("/favourites", (req, res) => {
     }
 
     return userService.deleteFavourite(userId, airbnbId)
-    .then(res.status(200).end())
+    .then(res.status(200).send("Ok"))
     .catch((error) => {
       res.status(500).send("Error while removing airbnb from favourites!");
     });
