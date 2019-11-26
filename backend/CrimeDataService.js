@@ -167,7 +167,7 @@ class CrimeDataService {
         res();
       }).catch((err) => {
           rej(err);
-        })
+        });
     });
   }
 
@@ -197,7 +197,7 @@ class CrimeDataService {
           db.loadTable("crimedata_cov.csv", "crime_data", parseColumns).then(() => {
             resolve();
           });
-        })});
+        });});
       });
       that.requestCrimeData(output, COVconfig).catch((error) => reject(error));
     });
