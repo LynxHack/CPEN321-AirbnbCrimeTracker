@@ -28,7 +28,7 @@ function degToRad(deg) {
 *
 */
 function RadToDeg (rad){
-    return (rad / pi * 180.0)
+    return (rad / pi * 180.0);
 }
 
 
