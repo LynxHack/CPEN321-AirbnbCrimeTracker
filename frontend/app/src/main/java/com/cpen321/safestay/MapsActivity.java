@@ -1,19 +1,6 @@
 package com.cpen321.safestay;
 
-import com.android.volley.RetryPolicy;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.fragment.app.FragmentActivity;
-
 import android.Manifest;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -39,12 +26,21 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.fragment.app.FragmentActivity;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
+import com.android.volley.VolleyError;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -55,16 +51,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
-
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.google.android.libraries.places.api.model.AutocompletePrediction;
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken;
 import com.google.android.libraries.places.api.model.Place;
@@ -74,10 +65,13 @@ import com.google.android.libraries.places.api.net.FetchPlaceResponse;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest;
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsResponse;
 import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
 import com.squareup.picasso.Picasso;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -91,24 +85,11 @@ import java.util.TimerTask;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    // private LocationManager locationManager;
-
-
-    // private Location mLastKnownLocation;
-    // private LocationCallback locationCallback;
-
-    // private MaterialSearchBar materialSearchBar;
-    private LocationManager locationManager;
     private PlacesClient placesClient;
     private List<AutocompletePrediction> predictionList;
     private static final String CHANNEL_ID = "channel1";
     private NotificationCompat.Builder builder;
-
-    // private Location mLastKnownLocation;
-    // private LocationCallback locationCallback;
-
     private MaterialSearchBar materialSearchBar;
-    private View mapView;
 
     private LatLng currentLocation;
     private final String listingURL = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/getListing/";
@@ -162,6 +143,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         final AutocompleteSessionToken token = AutocompleteSessionToken.newInstance();
         materialSearchBar = findViewById(R.id.searchBar);
 
+        // Initialize variables for querying with filters
         currentMinPrice = 0;
         currentMaxPrice = 2000;
         currentMinSafetyIndex = 0;
@@ -181,7 +163,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onSearchConfirmed(CharSequence text) {
-                //startSearch(text.toString(), true, null, true);
                 searchCity(text.toString());
                 searchedCity = text.toString();
             }
@@ -194,8 +175,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (filterUI != null)
                         filterUI.dismiss();
 
-                    //filterUI (filterData filterData, Context parentContext, GoogleMap mMap, HashMap<Integer, AirbnbRental> rentalMap, FavouriteAirbnbs favouriteAirbnbs,
-                    //                BitmapDescriptor icon)
                     filterUI = new filterUI(filterData, getApplicationContext(), mMap, rentalMap, favouriteAirbnbs, icon, farLeft, nearRight, rentalMarkers,
                             currentMinPrice, currentMaxPrice, currentMinSafetyIndex, currentMaxSafetyIndex, currentCapacity, builder,
                             searchedCity, timerStarted, rentalList, bottomSheet, getSupportFragmentManager());
@@ -208,6 +187,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        // Display autocomplete recommendations
         materialSearchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -253,6 +233,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+
+        // Zoom into autocompleted city
         materialSearchBar.setSuggestionsClickListener(new SuggestionsAdapter.OnItemViewClickListener() {
             @Override
             public void OnItemClickListener(int position, final View v) {
@@ -263,12 +245,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String suggestion = materialSearchBar.getLastSuggestions().get(position).toString();
                 materialSearchBar.setText(suggestion);
 
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        materialSearchBar.clearSuggestions();
-                    }
-                },500);
+                hideHistory();
 
                 InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                 if(inputMethodManager != null)
@@ -330,6 +307,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 13.0f));
         }
 
+        // Display bottomsheet with Airbnb rental information if marker clicked on
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
@@ -346,6 +324,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        // Get Airbnb rentals if map hovers over uncovered location
         mMap.setOnCameraIdleListener(new GoogleMap.OnCameraIdleListener() {
             @Override
             public void onCameraIdle() {
@@ -443,18 +422,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             public void onErrorResponse(VolleyError error) {
                                 Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_LONG).show();
                                 System.out.println("Error: " + error.toString());
-                                if (error == null || error.networkResponse == null) {
-                                    return;
-                                }
-
-                                String body;
-                                //get response body and parse with appropriate encoding
-                                 try {
-                                    body = new String(error.networkResponse.data, "UTF-8");
-                                    Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
-                                 } catch (UnsupportedEncodingException e) {
-                                     //exception handling to be placed here
-                                 }
                             }
                         });
 
@@ -479,14 +446,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    /*
-    View listedView = getLayoutInflater().inflate(R.layout.activity_listview, null);
-    ImageView imageView = listedView.findViewById(R.id.imageView);
-    TextView textView = listedView.findViewById(R.id.listTextView);
-
-    imageView.setImageRe
-     */
-
     private void userLocation() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -506,18 +465,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        // System.out.println("RECEIVED RESPONSE" + response.toString());
-//
                         try {
                             JSONObject coordinates = response.getJSONArray("results").getJSONObject(0).getJSONObject("geometry").getJSONObject("location");
 
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(coordinates.getDouble("lat"), coordinates.getDouble("lng")),
                                     14));
                         } catch (JSONException e) {
-                            //problem with receiving JSONObject
-                            //OR
-                            //problem with extracting info from JSONObject
-                            Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Invalid location", Toast.LENGTH_SHORT).show();
                             e.printStackTrace();
                         }
                     }
@@ -525,25 +479,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Invalid city", Toast.LENGTH_SHORT).show();
-                        if (error == null || error.networkResponse == null) {
-                            return;
-                        }
-
-                        String body;
-                        //get response body and parse with appropriate encoding
-                        try {
-                            body = new String(error.networkResponse.data, "UTF-8");
-                            Toast.makeText(getApplicationContext(), body, Toast.LENGTH_SHORT).show();
-
-                        } catch (UnsupportedEncodingException e) {
-                            //exception handling to be placed here
-                        }
+                        Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_SHORT).show();
                     }
                 });
 
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsObjRequest);
 
+        hideHistory();
+    }
+
+    private void hideHistory() {
+        // Hide search history after completing a search
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -568,7 +514,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    // Get Google account info to acquire favourited Airbnb after sign-in
     private void getGoogleAccountInfo() {
+
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
@@ -579,11 +527,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         userId = account.getId();
         favouriteAirbnbs = new FavouriteAirbnbs(userId, getApplicationContext());
-
-        //Toast.makeText(getApplicationContext(), userId, Toast.LENGTH_SHORT).show();
-        //System.out.println(userId);
     }
 
+    // Draw favourite icon (Airbnb red star) upon launching app to display favourited rentals
     private BitmapDescriptor getMarkerIconFromDrawable(Drawable drawable) {
         Canvas canvas = new Canvas();
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -594,6 +540,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
+    // Notify users of number of rentals w/ selected filters in searched area
     private void fireNotification(int numRentals) {
         final Context context = this;
         if (!timerStarted) {
@@ -615,6 +562,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    // Custom Adapter to display ListView of Airbnb rentals at bottom of the screen
     class CustomAdapter extends BaseAdapter {
 
         @Override
@@ -627,11 +575,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return null;
         }
 
+        // Variable to check if search bar is being used to avoid conflicts
         private InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
 
         @Override
         public long getItemId(int i) {
 
+            // Check if user is typing in search bar due to touch interface conflict between it and ListView
             if (!textChange) {
                 imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                 textChange = true;
@@ -639,6 +589,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             else textChange = false;
 
+            // If the user is clicking on the ListView and not the search bar, zoom in on Airbnb marker and display bottomsheet
             if (!imm.isAcceptingText()) {
                 if (bottomSheet != null)
                     bottomSheet.dismiss();
@@ -652,6 +603,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return rentalList.get(i).getId();
         }
 
+        // Retrieve Airbnb picture and name, and inflate view to be added to ListView
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             View listedView = getLayoutInflater().inflate(R.layout.activity_listview, null);

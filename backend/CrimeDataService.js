@@ -13,15 +13,15 @@ const EPOCH_WEEK = EPOCH_DAY * 7;
 const clear = false;
 
 const crimeSeverity = {
-  'Theft from Vehicle': 1.2,
-  'Theft of Vehicle': 1.5,
-  'Theft of Bicycle': 0.8,
-  'Other Theft': 0.7,
-  'Offence Against a Person': 1.5,
-  'Mischief': 0.5,
-  'Break and Enter Residential/Other': 1.8,
-  'Break and Enter Commercial': 1.8,
-  'Vehicle Collision or Pedestrian Struck (with Injury)': 0.6,
+  "Theft from Vehicle": 1.2,
+  "Theft of Vehicle": 1.5,
+  "Theft of Bicycle": 0.8,
+  "Other Theft": 0.7,
+  "Offence Against a Person": 1.5,
+  "Mischief": 0.5,
+  "Break and Enter Residential/Other": 1.8,
+  "Break and Enter Commercial": 1.8,
+  "Vehicle Collision or Pedestrian Struck (with Injury)": 0.6,
   "THEFT" : 1,
   "OFFENSE INVOLVING CHILDREN" : 1.2,
   "NARCOTICS" : 0.8,
@@ -53,7 +53,7 @@ const crimeSeverity = {
   "HUMAN TRAFFICKING" : 2.0,
   "PUBLIC INDECENCY": 0.8,
   "NON-CRIMINAL" : 0.5
-}
+};
 
 const COVconfig = {
   url: "http://" + "geodash.vpd.ca",
@@ -63,7 +63,7 @@ const COVconfig = {
     "Accept-Encoding": "gzip,deflate",
     "connection": "keep-alive"
   }
-}
+};
 
 const COCconfig = {
   url: "http://" + "data.cityofchicago.org",
@@ -73,7 +73,7 @@ const COCconfig = {
     "Accept-Encoding": "deflate",
     "connection": "keep-alive"
   }
-}
+};
 
 const fileName = "crimedata_csv_all_years.csv";
 // const zipFile = "crimedata.zip";
@@ -167,7 +167,7 @@ class CrimeDataService {
         res();
       }).catch((err) => {
           rej(err);
-        })
+        });
     });
   }
 
@@ -192,12 +192,12 @@ class CrimeDataService {
       const output = fs.createWriteStream("crimedata.zip");
       output.on("finish", () => {
         that.unzipFile()
-        .then((result) => {that.mapCoordinates().then(() =>{
-          const parseColumns = "(type, year, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, lat, lng)"
-          db.loadTable("crimedata_cov.csv", "crime_data", parseColumns).then(() =>{
+        .then((result) => {that.mapCoordinates().then(() => {
+          const parseColumns = "(type, year, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, lat, lng)";
+          db.loadTable("crimedata_cov.csv", "crime_data", parseColumns).then(() => {
             resolve();
           });
-        })})
+        });});
       });
       that.requestCrimeData(output, COVconfig).catch((error) => reject(error));
     });
@@ -209,7 +209,7 @@ class CrimeDataService {
       const output = fs.createWriteStream("crimes_-_2019.csv");
       output.on("finish", () => {
         //ID CaseNumber	Date	Block	IUCR	PrimaryTypeDescription	Secondary, LocationDescription	Arrest	Domestic	Beat District Ward	CommunityArea	FBICode	XCoordinate	YCoordinate	Year Updated Latitude	Longitude	Location
-        const parseColumns = "(@dummy, @dummy, @dummy, @dummy, @dummy, type, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, year, @dummy, lat, lng, @dummy)"
+        const parseColumns = "(@dummy, @dummy, @dummy, @dummy, @dummy, type, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, year, @dummy, lat, lng, @dummy)";
         db.loadTable("crimes_-_2019.csv", "crime_data", parseColumns).then((result) => {
           resolve();
         })
@@ -257,23 +257,23 @@ class CrimeDataService {
       // console.log("Converting COV file to use latitude longitude...")
       readStream.pipe(csv.parse({ columns: true }))
       .pipe(csv.transform(function(data) {
-          if(typeof(data['X']) != 'number') {
-            let x = data['X'];
-            let y = data['Y'];
-            var latlon = new Array(2)
-            latlongToUTM(x, y, latlon)
-            data['X'] = latlon[0];
-            data['Y'] = latlon[1];
+          if(typeof(data["X"]) != "number") {
+            let x = data["X"];
+            let y = data["Y"];
+            var latlon = new Array(2);
+            latlongToUTM(x, y, latlon);
+            data["X"] = latlon[0];
+            data["Y"] = latlon[1];
           }
           return data;
       }))
       .pipe(csv.stringify())
       .pipe(writeStream);
 
-      writeStream.on('finish', () => {
+      writeStream.on("finish", () => {
         // console.log("Finished conversion");
-        resolve()
-      })
+        resolve();
+      });
     });
   }
 }

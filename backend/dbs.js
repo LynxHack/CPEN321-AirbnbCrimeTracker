@@ -40,7 +40,7 @@ class Db {
     var that = this;
     return that.connectToDb()
                 .then((value) => {
-                  return that.createDatabase()
+                  return that.createDatabase();
                 })
                 .then((value) => {
                   if(clear) {
@@ -148,7 +148,7 @@ class Db {
           // console.log(err + " getting data from table!");
           reject(err);
         }
-        if (result.length == 0) {
+        if (result.length === 0) {
           resolve();
         } else {
           resolve(result[0]);

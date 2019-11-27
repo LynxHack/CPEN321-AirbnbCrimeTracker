@@ -1,7 +1,5 @@
 package com.cpen321.safestay;
 
-//package org.florescu.android.rangeseekbar.sample;
-
 import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -27,8 +25,6 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -44,7 +40,6 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -61,11 +56,6 @@ public class filterUI extends BottomSheetDialogFragment {
     private RangeSeekBar priceBar;
     private RangeSeekBar peopleBar;
     private Context parentContext;
-    private int minSafetyIndex;
-    private int maxSafetyIndex;
-    private int minPrice;
-    private int maxPrice;
-    private int people;
 
     private GoogleMap mMap;
     private Map<Integer, AirbnbRental> rentalMap;
@@ -133,8 +123,6 @@ public class filterUI extends BottomSheetDialogFragment {
                 safeBar = v.findViewById(R.id.safetyIndex_slider);
                 priceBar = v.findViewById(R.id.priceRange_slider);
                 peopleBar = v.findViewById(R.id.numberOfOccupants_slider);
-                Date startDate = new Date(2019, 11, 25);
-                Date endDate = new Date(2019, 11, 31);
                 getRentals();
                 dismiss();
             }
@@ -142,47 +130,37 @@ public class filterUI extends BottomSheetDialogFragment {
         safeBar.setOnRangeSeekBarChangeListener(new RangeSeekBar.OnRangeSeekBarChangeListener() {
             @Override
             public void onRangeSeekBarValuesChanged(RangeSeekBar bar, Number minValue, Number maxValue) {
-                minSafetyIndex = minValue.intValue();
                 filterData.changeMinSafetyIndex(minValue.intValue());
-                maxSafetyIndex = maxValue.intValue();
                 filterData.changeMaxSafetyIndex(maxValue.intValue());
             }
         });
         priceBar.setOnRangeSeekBarChangeListener(new RangeSeekBar.OnRangeSeekBarChangeListener() {
             @Override
             public void onRangeSeekBarValuesChanged(RangeSeekBar bar, Number minValue, Number maxValue) {
-                minPrice = minValue.intValue();
                 filterData.changeMinPrice(minValue.intValue());
-                maxPrice = maxValue.intValue();
                 filterData.changeMaxPrice(maxValue.intValue());
             }
         });
         peopleBar.setOnRangeSeekBarChangeListener(new RangeSeekBar.OnRangeSeekBarChangeListener() {
             @Override
             public void onRangeSeekBarValuesChanged(RangeSeekBar bar, Number minValue, Number maxValue) {
-                people = maxValue.intValue();
                 filterData.changeCapacity(maxValue.intValue());
             }
         });
-        /*Button resetButton = v.findViewById(R.id.filter_reset);
-        resetButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Date defaultDate = new Date();
-                filterData = new filterData(0,2000,1,10,1,null,null);
-            }
-        });*/
 
         return v;
     }
 
     private void getRentals() {
 
+        // Clear rentals and markers to set new filtered ones
         for (Marker marker : rentalMarkers) {
             marker.remove();
         }
+
         rentalMarkers.clear();
         rentalMap.clear();
+        rentalList.clear();
 
         String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
 
@@ -268,18 +246,6 @@ public class filterUI extends BottomSheetDialogFragment {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         //Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_LONG).show();
-                        if (error == null || error.networkResponse == null) {
-                            return;
-                        }
-
-                        String body;
-                        //get response body and parse with appropriate encoding
-                        try {
-                            body = new String(error.networkResponse.data, "UTF-8");
-                            Toast.makeText(parentContext, body, Toast.LENGTH_SHORT).show();
-                        } catch (UnsupportedEncodingException e) {
-                            //exception handling to be placed here
-                        }
                     }
                 });
 

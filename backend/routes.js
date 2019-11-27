@@ -30,18 +30,18 @@ router.get("/getListing", (req, res) => {
 
   var coord = [(yrange[0] + yrange[1])/2,(xrange[0] + xrange[1])/2];
   var mainquery = reverse.lookup(coord[0], coord[1], "ca").city.split(" ")[0];
-  mainquery = 'Vancouver';
+  mainquery = "Vancouver";
   return axios.get(`http://localhost:${pythonport}/airbnb`, {
     params:{
       location: mainquery,
-      startdate: startdate,
-      enddate: enddate
+      startdate,
+      enddate
     }
   }).then((result) => {
     var pruned = result.data.explore_tabs[0].sections.pop();
     pruned = JSON.parse(JSON.stringify(pruned)).listings.map((x) => {
       // console.log(x);
-      x.listing['pricing_quote'] = x.pricing_quote;
+      x.listing["pricing_quote"] = x.pricing_quote;
       return x.listing;
     });
     pruned = pruned.map((listing) => {
@@ -62,10 +62,10 @@ router.get("/getListing", (req, res) => {
       maxprice = maxprice ? maxprice : Number.MAX_SAFE_INTEGER;
       minsafety = minsafety ? minsafety : 0;
       maxsafety = maxsafety ? maxsafety : Number.MAX_SAFE_INTEGER;
-      pruned = pruned.filter((x) => {return x.pricing_quote.rate.amount >= minprice 
+      pruned = pruned.filter((x) => {return x.pricing_quote.rate.amount >= minprice
                                          && x.pricing_quote.rate.amount <= maxprice
                                          && x.safetyIndex >= minsafety
-                                         && x.safetyIndex <= maxsafety});
+                                         && x.safetyIndex <= maxsafety;});
     }
 
     res.status(200).send(JSON.stringify({"Listings" : pruned}));
@@ -80,7 +80,7 @@ router.put("/favourites", (req, res) => {
   var airbnbId = req.body.airbnbId;
     if (!userId || !airbnbId) {
       res.status(400).send("Invalid params");
-      return;
+      return Promise.resolve();
     }
 
     return userService.addFavourite(userId, airbnbId)
@@ -95,7 +95,7 @@ router.delete("/favourites", (req, res) => {
   var airbnbId = req.query["airbnbId"];
     if (!userId || !airbnbId) {
       res.status(400).send("Invalid params");
-      return;
+      return Promise.resolve();
     }
 
     return userService.deleteFavourite(userId, airbnbId)
@@ -109,7 +109,7 @@ router.get("/favourites", (req, res) => {
   var userId = req.query["userId"];
     if (!userId) {
       res.status(400).send("Invalid params");
-      return;
+      return Promise.resolve();
     }
 
     return userService.getFavourites(userId)

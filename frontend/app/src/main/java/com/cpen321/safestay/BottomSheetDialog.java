@@ -7,27 +7,24 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.squareup.picasso.Picasso;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public class BottomSheetDialog extends BottomSheetDialogFragment {
 
@@ -93,7 +90,8 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
 
     @Override
     public void onCancel(DialogInterface dialog) {
-        // Toast doesn't appear but this works - Replace with favourite logic
+
+        // Favourite/Unfavourite Airbnb if user clicks on favourite buton and closes bottom sheet
         Integer rentalId = rental.getId();
         if (!favouriteAirbnbs.isFavourite(rentalId) && favourite.isChecked()) {
             favouriteAirbnbs.addFavourite(rentalId, this.getContext());
@@ -116,21 +114,17 @@ public class BottomSheetDialog extends BottomSheetDialogFragment {
 
             rental.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(colour));
         }
-        Toast.makeText(parentContext, "Works!", Toast.LENGTH_SHORT);
+
         super.onCancel(dialog);
     }
 
+    // Convert favourite drawable from Drawable to be displayed on screen
     private BitmapDescriptor getMarkerIconFromDrawable(Drawable drawable) {
         Canvas canvas = new Canvas();
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         canvas.setBitmap(bitmap);
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
         drawable.draw(canvas);
-
-        /*Bitmap withBorder = Bitmap.createBitmap(bitmap.getWidth() + 2, bitmap.getHeight() + 2, bitmap.getConfig());
-        canvas = new Canvas(withBorder);
-        canvas.drawColor(Color.WHITE);
-        canvas.drawBitmap(bitmap, 1, 1, null);*/
 
         return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
