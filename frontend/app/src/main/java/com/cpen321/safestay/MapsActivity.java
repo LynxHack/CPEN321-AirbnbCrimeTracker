@@ -19,6 +19,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -30,8 +31,12 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -72,6 +77,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter;
+import com.squareup.picasso.Picasso;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -105,13 +111,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private View mapView;
 
     private LatLng currentLocation;
-//    private final String listingURL = "http://192.168.1.72:3000/getListing/";
     private final String listingURL = "http://ec2-54-213-225-200.us-west-2.compute.amazonaws.com:3000/getListing/";
     private final String googleURL = "https://maps.googleapis.com/maps/api/geocode/json?address=";
     private final String googleSearchKey = "&key=AIzaSyCvOK46FEquDa11YXuDS1STdXYu_yXQLPE";
-    private List<LatLng> markerList = new ArrayList<LatLng>();
     private Map<Integer, AirbnbRental> rentalMap = new HashMap<Integer, AirbnbRental>();
     private List<Marker> rentalMarkers = new ArrayList<Marker>();
+    private List<AirbnbRental> rentalList = new ArrayList<AirbnbRental>();
     private LatLng farLeft;
     private LatLng nearRight;
     private boolean timerStarted;
@@ -122,16 +127,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private filterData filterData;
     private filterUI filterUI;
     private Integer currentMinPrice, currentMaxPrice, currentMinSafetyIndex, currentMaxSafetyIndex, currentCapacity;
+    private boolean textChange;
+
 
     private String userId;
-    private ListView list;
+    private ListView listView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
@@ -162,7 +169,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         currentCapacity = 1;
         filterData = new filterData(currentMinPrice, currentMaxPrice, currentMinSafetyIndex,currentMaxSafetyIndex, currentCapacity, null, null);
 
+        textChange = false;
+
         // Initialize ListView
+        listView = findViewById(R.id.list);
 
         materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
             @Override
@@ -178,6 +188,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onButtonClicked(int buttonCode) {
+                final SupportMapFragment parentMapFragment = mapFragment;
+
                 if (buttonCode == MaterialSearchBar.BUTTON_NAVIGATION) {
                     if (filterUI != null)
                         filterUI.dismiss();
@@ -186,7 +198,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     //                BitmapDescriptor icon)
                     filterUI = new filterUI(filterData, getApplicationContext(), mMap, rentalMap, favouriteAirbnbs, icon, farLeft, nearRight, rentalMarkers,
                             currentMinPrice, currentMaxPrice, currentMinSafetyIndex, currentMaxSafetyIndex, currentCapacity, builder,
-                            searchedCity, timerStarted);
+                            searchedCity, timerStarted, rentalList, bottomSheet, getSupportFragmentManager());
                     filterUI.show(getSupportFragmentManager(), "test");
                 }
 
@@ -199,6 +211,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         materialSearchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                textChange = true;
             }
 
             @Override
@@ -232,6 +245,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
                 });
+                textChange = false;
             }
 
             @Override
@@ -398,6 +412,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             }
 
                                             Marker marker = mMap.addMarker(new MarkerOptions().position(coords)
+                                                    .title("this is a marker")
                                                     .icon(bitmap));
                                             marker.setTag(id);
 
@@ -406,12 +421,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                             AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index, marker, price);
 
                                             rentalMap.put(id, rental);
+                                            if (favouriteAirbnbs.isFavourite(id)) {
+                                                rentalList.add(0, rental);
+                                            }
+                                            else rentalList.add(rental);
                                         }
 
                                     }
 
+                                    CustomAdapter customAdapter = new CustomAdapter();
+                                    listView.setAdapter(customAdapter);
+
                                 } catch (JSONException e) {
-                                    Toast.makeText(getApplicationContext(), "JSON Exception parsing Airbnb rental info!", Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(getApplicationContext(), "JSON Exception parsing Airbnb rental info!", Toast.LENGTH_SHORT).show();
                                     e.printStackTrace();
                                 }
                             }
@@ -419,7 +441,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                //Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), "Error: " + error.toString(), Toast.LENGTH_LONG).show();
+                                System.out.println("Error: " + error.toString());
                                 if (error == null || error.networkResponse == null) {
                                     return;
                                 }
@@ -438,12 +461,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 jsObjRequest.setRetryPolicy(new RetryPolicy() {
                     @Override
                     public int getCurrentTimeout() {
-                        return 100000;
+                        return 5000;
                     }
 
                     @Override
                     public int getCurrentRetryCount() {
-                        return 100000;
+                        return 5000;
                     }
 
                     @Override
@@ -455,6 +478,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
     }
+
+    /*
+    View listedView = getLayoutInflater().inflate(R.layout.activity_listview, null);
+    ImageView imageView = listedView.findViewById(R.id.imageView);
+    TextView textView = listedView.findViewById(R.id.listTextView);
+
+    imageView.setImageRe
+     */
 
     private void userLocation() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -584,51 +615,58 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    /*@Override
-    protected void onStop() {
-        final Context context = this;
+    class CustomAdapter extends BaseAdapter {
 
-        if (!timerStarted) {
-            timerStarted = true;
-            if (!(searchedCity == "" || searchedCity == null))
-                builder.setContentText("Don't wait! Book that Airbnb in " + searchedCity + "!");
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
-                    // notificationId is a unique int for each notification that you must define
-                    notificationManager.notify(1, builder.build());
-                    timerStarted = false;
-                }
-            }, 5 * 1000);
+        @Override
+        public int getCount() {
+            return rentalList.size();
         }
 
-        super.onStop();
+        @Override
+        public Object getItem(int i) {
+            return null;
+        }
+
+        private InputMethodManager imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        @Override
+        public long getItemId(int i) {
+
+            if (!textChange) {
+                imm = (InputMethodManager) getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                textChange = true;
+            }
+
+            else textChange = false;
+
+            if (!imm.isAcceptingText()) {
+                if (bottomSheet != null)
+                    bottomSheet.dismiss();
+                rentalList.get(i).getMarker();
+                AirbnbRental current = rentalList.get(i);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current.getLatLng(),
+                        15f));
+                bottomSheet = new BottomSheetDialog(current, favouriteAirbnbs, getApplicationContext());
+                bottomSheet.show(getSupportFragmentManager(), "test");
+            }
+            return rentalList.get(i).getId();
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            View listedView = getLayoutInflater().inflate(R.layout.activity_listview, null);
+            ImageView imageView = listedView.findViewById(R.id.imageView);
+            TextView textView = listedView.findViewById(R.id.listTextView);
+
+            Picasso.with(getApplicationContext()).load(rentalList.get(i).getURL()).into(imageView);
+            textView.setText(rentalList.get(i).getName());
+
+            if (favouriteAirbnbs.isFavourite(rentalList.get(i).getId())) {
+                ImageView favourite = listedView.findViewById(R.id.favouriteView);
+                favourite.setImageBitmap(BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.ic_star_favourite));
+            }
+
+            return listedView;
+        }
     }
-
-    @Override
-    protected void onDestroy() {
-        final Context context = this;
-
-        if (!timerStarted) {
-            timerStarted = true;
-            if (!(searchedCity == "" || searchedCity == null))
-                builder.setContentText("Don't wait! Book that Airbnb in " + searchedCity + "!");
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
-                    // notificationId is a unique int for each notification that you must define
-                    notificationManager.notify(1, builder.build());
-                    timerStarted = false;
-                }
-            }, 5 * 1000);
-        }
-
-        super.onDestroy();
-    }*/
 }

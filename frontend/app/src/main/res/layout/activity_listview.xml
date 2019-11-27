@@ -5,10 +5,27 @@
     android:orientation="vertical">
 
     <ImageView
-        android:id="@+id/imageview"
-        android:layout_width="fill_parent"
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:padding="@dimen/activity_horizontal_margin"
         />
+    <TextView
+        android:id="@+id/listTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/quantum_black_100"
+        android:textSize="16dp"
+        android:text="Test"
+        android:textAlignment="center"
+        />
+
+    <ImageView
+        android:id="@+id/favouriteView"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="center"
+        />
+
 </LinearLayout>
