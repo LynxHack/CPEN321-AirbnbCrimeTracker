@@ -334,6 +334,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
 
+                // Add filter data to request
                 if (filterData != null) {
                     url = url + "&minprice=" + filterData.getMinPrice()
                             + "&maxprice=" + filterData.getMaxPrice()
@@ -341,33 +342,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             + "&maxsafety=" + filterData.getMaxSafetyIndex();
                 }
 
-                System.out.println(url);
                 CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, url, null,
                         new Response.Listener<JSONObject>() {
                             @Override
                             public void onResponse(JSONObject response) {
-                                System.out.println("RECEIVED RESPONSE" + response.toString());
 
                                 try {
                                     JSONArray listings = response.getJSONArray("Listings");
 
                                     int numListings = listings.length();
+
+                                    // For number of rentals notification
                                     boolean flag = true;
 
+                                    // For each Airbnb rental received from request
                                     for (int i = 0; i < numListings; i++) {
 
                                         JSONObject current = listings.getJSONObject(i);
 
+                                        // Get the coordinates and Airbnb ID
                                         LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
                                         Integer id = current.getInt("id");
 
+                                        // If rental is not on the map, display it
                                         if (!rentalMap.containsKey(id)) {
 
+                                            // Fire one notification for number of rentals
                                             if (flag) {
                                                 flag = false;
                                                 fireNotification(numListings);
                                             }
 
+                                            // Parse rental info
                                             String name = current.getString("name");
                                             double rating = current.getDouble("star_rating");
                                             int reviewCount = current.getInt("reviews_count");
@@ -378,6 +384,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                             BitmapDescriptor bitmap;
 
+                                            // Display appropriate marker (favourite/safety colour)
                                             if (favouriteAirbnbs.isFavourite(id)) {
                                                 bitmap = icon;
                                             }
@@ -390,13 +397,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                                 else  bitmap = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
                                             }
 
+                                            // Design and place marker
                                             Marker marker = mMap.addMarker(new MarkerOptions().position(coords)
-                                                    .title("this is a marker")
                                                     .icon(bitmap));
                                             marker.setTag(id);
 
                                             rentalMarkers.add(marker);
 
+                                            // Create new object for rental and put it in map and list
                                             AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index, marker, price);
 
                                             rentalMap.put(id, rental);
@@ -408,6 +416,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                     }
 
+                                    // Display rentals in ListView at bottom of the screen
                                     CustomAdapter customAdapter = new CustomAdapter();
                                     listView.setAdapter(customAdapter);
 
@@ -446,6 +455,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    // Get user location upon launching app
     private void userLocation() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -457,6 +467,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    // Search city if user does not select an autocomplete recommendation
     private void searchCity(String city) {
         // Replace spaces with space ASCII code
         String searchURL = googleURL + city.replace(" ", "%20") + googleSearchKey;

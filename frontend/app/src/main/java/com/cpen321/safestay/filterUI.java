@@ -153,7 +153,7 @@ public class filterUI extends BottomSheetDialogFragment {
 
     private void getRentals() {
 
-        // Clear rentals and markers to set new filtered ones
+        // Clear currently displayed rentals and markers to set new filtered ones
         for (Marker marker : rentalMarkers) {
             marker.remove();
         }
@@ -164,39 +164,46 @@ public class filterUI extends BottomSheetDialogFragment {
 
         String url = listingURL.concat("?xmin=").concat(Double.toString(farLeft.longitude)).concat("&xmax=").concat(Double.toString(nearRight.longitude)).concat("&ymin=").concat(Double.toString(nearRight.latitude)) + "&ymax=".concat(Double.toString(farLeft.latitude));
 
+        // Add filter data to request
         if (filterData != null) {
             url = url.concat("&minprice=").concat(Integer.toString(filterData.getMinPrice()))
                     .concat("&maxprice=").concat(Integer.toString(filterData.getMaxPrice()))
                     .concat("&minsafety=").concat(Integer.toString(filterData.getMinSafetyIndex()))
                     .concat("&maxsafety=").concat(Integer.toString(filterData.getMaxSafetyIndex()));
-            System.out.println("GOTTA GO FAST");
         }
 
         CustomRequest jsObjRequest = new CustomRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        System.out.println("RECEIVED RESPONSE" + response.toString());
 
                         try {
                             JSONArray listings = response.getJSONArray("Listings");
 
                             int numListings = listings.length();
+
+                            // For number of rentals notification
                             boolean flag = true;
 
+                            // For each Airbnb rental received from request
                             for (int i = 0; i < numListings; i++) {
 
                                 JSONObject current = listings.getJSONObject(i);
 
+                                // Get the coordinates and Airbnb ID
                                 LatLng coords = new LatLng(current.getDouble("lat"), current.getDouble("lng"));
                                 Integer id = current.getInt("id");
 
+                                // If rental is not on the map, display it
                                 if (!rentalMap.containsKey(id)) {
+
+                                    // Fire one notification for number of rentals
                                     if (flag) {
                                         flag = false;
                                         fireNotification(numListings);
                                     }
 
+                                    // Parse rental info
                                     String name = current.getString("name");
                                     double rating = current.getDouble("star_rating");
                                     int reviewCount = current.getInt("reviews_count");
@@ -207,6 +214,7 @@ public class filterUI extends BottomSheetDialogFragment {
 
                                     BitmapDescriptor bitmap;
 
+                                    // Display appropriate marker (favourite/safety colour)
                                     if (favouriteAirbnbs.isFavourite(id)) {
                                         bitmap = icon;
                                     }
@@ -219,12 +227,14 @@ public class filterUI extends BottomSheetDialogFragment {
                                         else  bitmap = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
                                     }
 
+                                    // Design and place marker
                                     Marker marker = mMap.addMarker(new MarkerOptions().position(coords)
                                             .icon(bitmap));
                                     marker.setTag(id);
 
                                     rentalMarkers.add(marker);
 
+                                    // Create new object for rental and put it in map and list
                                     AirbnbRental rental = new AirbnbRental(id, coords, name, rating, reviewCount, capacity, url, safety_index, marker, price);
 
                                     rentalMap.put(id, rental);
