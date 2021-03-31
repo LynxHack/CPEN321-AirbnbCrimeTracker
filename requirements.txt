@@ -34,7 +34,7 @@ Keras-Applications==1.0.7
 Keras-Preprocessing==1.0.9
 kiwisolver==1.0.1
 language-selector==0.1
-lxml==4.2.6
+lxml==4.6.3
 Markdown==3.1
 MarkupSafe==0.23
 matplotlib==3.0.3
@@ -123,7 +123,7 @@ Keras-Applications==1.0.7
 Keras-Preprocessing==1.0.9
 kiwisolver==1.0.1
 language-selector==0.1
-lxml==4.2.6
+lxml==4.6.3
 Markdown==3.1
 MarkupSafe==0.23
 matplotlib==3.0.3
