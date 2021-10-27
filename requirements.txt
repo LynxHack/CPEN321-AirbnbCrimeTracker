@@ -13,7 +13,7 @@ command-not-found==0.3
 configobj==5.0.6
 cryptography==2.8
 cycler==0.10.0
-dask==1.1.4
+dask==2021.10.0
 decorator==4.4.0
 docker==4.1.0
 docker-compose==1.25.0
@@ -102,7 +102,7 @@ command-not-found==0.3
 configobj==5.0.6
 cryptography==2.8
 cycler==0.10.0
-dask==1.1.4
+dask==2021.10.0
 decorator==4.4.0
 docker==4.1.0
 docker-compose==1.25.0
